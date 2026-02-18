@@ -1,0 +1,4 @@
+﻿Contact [EMAIL] or call [PHONE]
+User reported issue from IP [IP_ADDRESS] and device [DEVICE]
+Logs stored at [UNC_PATH]
+SSN provided (should never happen): [SSN]

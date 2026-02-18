@@ -1,0 +1,4 @@
+Contact john.doe@example.com or call 612-555-1234
+User reported issue from IP 10.22.33.44 and device WS-NA-0042
+Logs stored at \\server01\share\Exports\case123\export.txt
+SSN provided (should never happen): 123-45-6789
