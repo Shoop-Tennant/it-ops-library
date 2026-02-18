@@ -223,3 +223,35 @@ I have updated the **Execution Environment** section to match your actual setup:
 - **Date:** - **Decision:** - **Rationale:** - **Owner:** - **Impacted systems/teams:** - **Follow-ups:** ```
 
 ```
+## Shell Cheat Sheet (Bash vs PowerShell)
+
+### How to tell which shell you're in
+- **Bash (WSL):** prompt looks like `jeremy@Shoop:~/...$`
+- **PowerShell:** prompt looks like `PS /home/jeremy/...>`
+
+### Rule of thumb
+- If you see **here-doc syntax** like `<<EOF` or `<<'EOF'` → run in **Bash**
+- If you see **PowerShell here-string** like `@' ... '@` → run in **PowerShell**
+
+### Creating files safely
+**Bash (WSL):**
+```bash
+cat > path/to/file.md <<'EOF'
+content here
+EOF
+```
+
+**PowerShell:**
+```powershell
+@'
+content here
+'@ | Set-Content -LiteralPath path\to\file.md -Encoding utf8
+```
+
+### Common mistake (what happened to us)
+- Copying the **bash file-creation command** into a `.ps1` file makes PowerShell throw parser errors.
+- `.ps1` files must contain **PowerShell code only**.
+
+### Public-safe content (GitHub hygiene)
+- Do **not** commit real internal domains, hostnames, share paths, usernames, ticket numbers, or customer data.
+- Use neutral examples like `example.com` and `\\server01\share\...`.
