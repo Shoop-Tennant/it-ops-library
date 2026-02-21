@@ -6,19 +6,26 @@ A practical library of IT Ops prompt cards and safe endpoint PowerShell scripts.
 ## Quick Start
 - Prereqs: Windows PowerShell 5.1+ or PowerShell 7, admin rights when required by a script.
 - Start here: `prompts/powershell/README.md` and `prompts/powershell/PromptCard_Template.md`.
-- Run a prompt card: open a card under `prompts/powershell/endpoint/`, fill Inputs, paste into your AI tool, and save the generated script under `PowerShell/`.
+- Run a prompt card: open a card under `prompts/powershell/endpoint/`, fill Inputs, and paste into your AI tool. Some scripts already exist in `PowerShell/`. New scripts should be created via a branch/PR.
 
 ## How To Run Scripts
 Windows PowerShell 5.1:
 ```
-Set-ExecutionPolicy -Scope Process Bypass
+Set-ExecutionPolicy -Scope Process Bypass -Force
 & "./PowerShell/<script>.ps1" -Verbose
 ```
 PowerShell 7:
 ```
 pwsh -ExecutionPolicy Bypass -File "./PowerShell/<script>.ps1" -Verbose
 ```
-Note: If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
+Note: UNC paths (`\\wsl.localhost\...`) + PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
+
+## Ready-to-Use Scripts
+- `PowerShell/Clear-TeamsCache.ps1`
+- `PowerShell/Get-DiagnosticsBundle.ps1`
+- `PowerShell/Repair-OutlookOst.ps1`
+- `PowerShell/Invoke-PrinterTriage.ps1`
+- `PowerShell/Reset-WindowsUpdateComponents.ps1`
 
 ## Folder Map
 - `PowerShell/` — endpoint scripts and reusable functions.
