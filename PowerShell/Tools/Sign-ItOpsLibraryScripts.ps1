@@ -1,4 +1,4 @@
-<#!
+<#
 .SYNOPSIS
   Signs PowerShell scripts in this repository using a code-signing certificate.
 
@@ -32,12 +32,19 @@ param(
 
   [string]$Path = (Join-Path $PSScriptRoot '..'),
 
-  [switch]$Recurse = $true
+  [bool]$Recurse = $true
 )
 
 $ErrorActionPreference = 'Stop'
 
-if (-not $IsWindows) {
+$IsWindowsHost = $true
+if ($PSVersionTable.PSEdition -eq 'Core') {
+  $IsWindowsHost = $IsWindows
+} else {
+  $IsWindowsHost = ($env:OS -eq 'Windows_NT')
+}
+
+if (-not $IsWindowsHost) {
   Write-Warning 'This script is Windows-only. Code signing requires Windows certificate stores.'
   return
 }
@@ -59,11 +66,21 @@ if ($Recurse) {
 }
 
 $results = foreach ($file in $files) {
-  $sig = Set-AuthenticodeSignature -FilePath $file.FullName -Certificate $cert -ErrorAction SilentlyContinue
-  [pscustomobject]@{
-    File = $file.FullName
-    Status = $sig.Status
-    StatusMessage = $sig.StatusMessage
+  try {
+    $sig = Set-AuthenticodeSignature -FilePath $file.FullName -Certificate $cert -ErrorAction Stop
+    [pscustomobject]@{
+      File = $file.FullName
+      Status = $sig.Status
+      StatusMessage = $sig.StatusMessage
+      Error = $null
+    }
+  } catch {
+    [pscustomobject]@{
+      File = $file.FullName
+      Status = 'Error'
+      StatusMessage = 'Failed to sign file'
+      Error = $_.Exception.Message
+    }
   }
 }
 
