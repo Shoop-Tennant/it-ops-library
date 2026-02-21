@@ -1,0 +1,141 @@
+<#!
+.SYNOPSIS
+  Clears Microsoft Teams cache for a user profile with safe defaults.
+
+.DESCRIPTION
+  Stops Teams processes (classic and new Teams), clears common cache folders,
+  and optionally relaunches Teams. Designed for endpoint troubleshooting and
+  supports -WhatIf via ShouldProcess for all changes.
+
+.PARAMETER UserProfile
+  Target user profile path. Defaults to the current user's profile.
+
+.PARAMETER SkipRelaunch
+  Do not relaunch Teams after clearing cache.
+
+.EXAMPLE
+  pwsh ./PowerShell/Clear-TeamsCache.ps1 -Verbose
+
+.EXAMPLE
+  pwsh ./PowerShell/Clear-TeamsCache.ps1 -UserProfile "C:\Users\jsmith" -SkipRelaunch -Verbose
+
+.NOTES
+  PowerShell 5.1+ compatible. Writes a transcript to a user-writable folder.
+#>
+
+[CmdletBinding(SupportsShouldProcess)]
+param(
+  [string]$UserProfile = $env:USERPROFILE,
+  [switch]$SkipRelaunch
+)
+
+$ErrorActionPreference = 'Stop'
+
+$scriptName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath)
+$timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+$logPath = Join-Path $env:TEMP ("{0}-{1}.log" -f $scriptName, $timestamp)
+Start-Transcript -Path $logPath | Out-Null
+
+$actions = New-Object System.Collections.Generic.List[object]
+$warnings = New-Object System.Collections.Generic.List[string]
+
+function Add-Action {
+  param([string]$Action, [string]$Target, [string]$Result)
+  $actions.Add([pscustomobject]@{
+    Action = $Action
+    Target = $Target
+    Result = $Result
+  }) | Out-Null
+}
+
+try {
+  if (-not (Test-Path -LiteralPath $UserProfile)) {
+    throw "UserProfile path not found: $UserProfile"
+  }
+
+  $teamsProcesses = @('Teams', 'ms-teams', 'TeamsClassic', 'TeamsBootstrapper', 'Teams.exe', 'ms-teams.exe')
+  $running = Get-Process -ErrorAction SilentlyContinue | Where-Object { $teamsProcesses -contains $_.Name }
+  foreach ($p in $running) {
+    if ($PSCmdlet.ShouldProcess($p.Name, 'Stop Teams process')) {
+      try {
+        Stop-Process -Id $p.Id -Force -ErrorAction Stop
+        Add-Action -Action 'Stop-Process' -Target $p.Name -Result 'Stopped'
+      } catch {
+        Add-Action -Action 'Stop-Process' -Target $p.Name -Result "Failed: $($_.Exception.Message)"
+      }
+    } else {
+      Add-Action -Action 'Stop-Process' -Target $p.Name -Result 'WhatIf'
+    }
+  }
+
+  $cachePaths = @(
+    Join-Path $UserProfile 'AppData\Roaming\Microsoft\Teams',
+    Join-Path $UserProfile 'AppData\Local\Microsoft\Teams',
+    Join-Path $UserProfile 'AppData\Local\Packages\MSTeams_8wekyb3d8bbwe\LocalCache',
+    Join-Path $UserProfile 'AppData\Local\Packages\MSTeams_8wekyb3d8bbwe\LocalState',
+    Join-Path $UserProfile 'AppData\Local\Packages\MicrosoftTeams_8wekyb3d8bbwe\LocalCache',
+    Join-Path $UserProfile 'AppData\Local\Packages\MicrosoftTeams_8wekyb3d8bbwe\LocalState'
+  ) | Select-Object -Unique
+
+  foreach ($path in $cachePaths) {
+    if (Test-Path -LiteralPath $path) {
+      if ($PSCmdlet.ShouldProcess($path, 'Remove Teams cache contents')) {
+        try {
+          Get-ChildItem -LiteralPath $path -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction Stop
+          Add-Action -Action 'Clear-Cache' -Target $path -Result 'Cleared'
+        } catch {
+          Add-Action -Action 'Clear-Cache' -Target $path -Result "Failed: $($_.Exception.Message)"
+        }
+      } else {
+        Add-Action -Action 'Clear-Cache' -Target $path -Result 'WhatIf'
+      }
+    } else {
+      Add-Action -Action 'Clear-Cache' -Target $path -Result 'NotFound'
+    }
+  }
+
+  if (-not $SkipRelaunch) {
+    $classicExe = Join-Path $UserProfile 'AppData\Local\Microsoft\Teams\current\Teams.exe'
+    $newExe = Join-Path $UserProfile 'AppData\Local\Microsoft\WindowsApps\ms-teams.exe'
+
+    if (Test-Path -LiteralPath $newExe) {
+      if ($PSCmdlet.ShouldProcess($newExe, 'Start Teams (new)')) {
+        try {
+          Start-Process -FilePath $newExe -ErrorAction Stop | Out-Null
+          Add-Action -Action 'Start-Process' -Target $newExe -Result 'Started'
+        } catch {
+          Add-Action -Action 'Start-Process' -Target $newExe -Result "Failed: $($_.Exception.Message)"
+        }
+      } else {
+        Add-Action -Action 'Start-Process' -Target $newExe -Result 'WhatIf'
+      }
+    } elseif (Test-Path -LiteralPath $classicExe) {
+      if ($PSCmdlet.ShouldProcess($classicExe, 'Start Teams (classic)')) {
+        try {
+          Start-Process -FilePath $classicExe -ErrorAction Stop | Out-Null
+          Add-Action -Action 'Start-Process' -Target $classicExe -Result 'Started'
+        } catch {
+          Add-Action -Action 'Start-Process' -Target $classicExe -Result "Failed: $($_.Exception.Message)"
+        }
+      } else {
+        Add-Action -Action 'Start-Process' -Target $classicExe -Result 'WhatIf'
+      }
+    } else {
+      $warnings.Add('Teams executable not found for relaunch.') | Out-Null
+    }
+  }
+
+  $summary = [pscustomobject]@{
+    Script = $scriptName
+    UserProfile = $UserProfile
+    SkipRelaunch = [bool]$SkipRelaunch
+    Actions = $actions
+    Warnings = $warnings
+    LogPath = $logPath
+  }
+
+  $summary
+}
+finally {
+  Stop-Transcript | Out-Null
+}

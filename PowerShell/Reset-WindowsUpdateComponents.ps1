@@ -1,0 +1,175 @@
+<#!
+.SYNOPSIS
+  Resets Windows Update components with safe defaults.
+
+.DESCRIPTION
+  Stops Windows Update related services, renames SoftwareDistribution and
+  Catroot2 folders, then restarts services. Optional Aggressive mode performs
+  additional BITS cleanup. Optional DISM and SFC steps are clearly gated.
+
+.PARAMETER Aggressive
+  Additional cleanup such as BITS queue reset (still guarded by ShouldProcess).
+
+.PARAMETER RunDISM
+  Run DISM /RestoreHealth (can take time).
+
+.PARAMETER RunSFC
+  Run sfc /scannow (can take time).
+
+.EXAMPLE
+  pwsh ./PowerShell/Reset-WindowsUpdateComponents.ps1 -Verbose
+
+.EXAMPLE
+  pwsh ./PowerShell/Reset-WindowsUpdateComponents.ps1 -Aggressive -RunDISM -Verbose
+
+.NOTES
+  PowerShell 5.1+ compatible. Writes a transcript to a user-writable folder.
+#>
+
+[CmdletBinding(SupportsShouldProcess)]
+param(
+  [switch]$Aggressive,
+  [switch]$RunDISM,
+  [switch]$RunSFC
+)
+
+$ErrorActionPreference = 'Stop'
+
+$scriptName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath)
+$timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+$logPath = Join-Path $env:TEMP ("{0}-{1}.log" -f $scriptName, $timestamp)
+Start-Transcript -Path $logPath | Out-Null
+
+$actions = New-Object System.Collections.Generic.List[object]
+$warnings = New-Object System.Collections.Generic.List[string]
+
+function Add-Action {
+  param([string]$Action, [string]$Target, [string]$Result)
+  $actions.Add([pscustomobject]@{
+    Action = $Action
+    Target = $Target
+    Result = $Result
+  }) | Out-Null
+}
+
+try {
+  $services = @('wuauserv', 'bits', 'cryptsvc', 'msiserver')
+
+  foreach ($svc in $services) {
+    if ($PSCmdlet.ShouldProcess($svc, 'Stop service')) {
+      try {
+        Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
+        Add-Action -Action 'Stop-Service' -Target $svc -Result 'Stopped'
+      } catch {
+        Add-Action -Action 'Stop-Service' -Target $svc -Result "Failed: $($_.Exception.Message)"
+      }
+    } else {
+      Add-Action -Action 'Stop-Service' -Target $svc -Result 'WhatIf'
+    }
+  }
+
+  $sd = Join-Path $env:WINDIR 'SoftwareDistribution'
+  $cr = Join-Path $env:WINDIR 'System32\catroot2'
+
+  $sdNew = "$sd.old.$timestamp"
+  $crNew = "$cr.old.$timestamp"
+
+  if ($PSCmdlet.ShouldProcess($sd, "Rename to $sdNew")) {
+    try {
+      if (Test-Path -LiteralPath $sd) {
+        Rename-Item -LiteralPath $sd -NewName (Split-Path -Leaf $sdNew) -ErrorAction Stop
+        Add-Action -Action 'Rename-Path' -Target $sd -Result "Renamed to $sdNew"
+      } else {
+        Add-Action -Action 'Rename-Path' -Target $sd -Result 'NotFound'
+      }
+    } catch {
+      Add-Action -Action 'Rename-Path' -Target $sd -Result "Failed: $($_.Exception.Message)"
+    }
+  } else {
+    Add-Action -Action 'Rename-Path' -Target $sd -Result 'WhatIf'
+  }
+
+  if ($PSCmdlet.ShouldProcess($cr, "Rename to $crNew")) {
+    try {
+      if (Test-Path -LiteralPath $cr) {
+        Rename-Item -LiteralPath $cr -NewName (Split-Path -Leaf $crNew) -ErrorAction Stop
+        Add-Action -Action 'Rename-Path' -Target $cr -Result "Renamed to $crNew"
+      } else {
+        Add-Action -Action 'Rename-Path' -Target $cr -Result 'NotFound'
+      }
+    } catch {
+      Add-Action -Action 'Rename-Path' -Target $cr -Result "Failed: $($_.Exception.Message)"
+    }
+  } else {
+    Add-Action -Action 'Rename-Path' -Target $cr -Result 'WhatIf'
+  }
+
+  if ($Aggressive) {
+    if ($PSCmdlet.ShouldProcess('BITS', 'Reset BITS job queue')) {
+      try {
+        bitsadmin /reset /allusers | Out-Null
+        Add-Action -Action 'BITS-Reset' -Target 'AllUsers' -Result 'Reset'
+      } catch {
+        Add-Action -Action 'BITS-Reset' -Target 'AllUsers' -Result "Failed: $($_.Exception.Message)"
+      }
+    } else {
+      Add-Action -Action 'BITS-Reset' -Target 'AllUsers' -Result 'WhatIf'
+    }
+  }
+
+  foreach ($svc in $services) {
+    if ($PSCmdlet.ShouldProcess($svc, 'Start service')) {
+      try {
+        Start-Service -Name $svc -ErrorAction SilentlyContinue
+        Add-Action -Action 'Start-Service' -Target $svc -Result 'Started'
+      } catch {
+        Add-Action -Action 'Start-Service' -Target $svc -Result "Failed: $($_.Exception.Message)"
+      }
+    } else {
+      Add-Action -Action 'Start-Service' -Target $svc -Result 'WhatIf'
+    }
+  }
+
+  if ($RunDISM) {
+    $warnings.Add('Running DISM /RestoreHealth can take time and requires admin.') | Out-Null
+    if ($PSCmdlet.ShouldProcess('DISM', 'Run DISM /RestoreHealth')) {
+      try {
+        dism /Online /Cleanup-Image /RestoreHealth | Out-String | Out-Null
+        Add-Action -Action 'DISM' -Target 'RestoreHealth' -Result 'Completed'
+      } catch {
+        Add-Action -Action 'DISM' -Target 'RestoreHealth' -Result "Failed: $($_.Exception.Message)"
+      }
+    } else {
+      Add-Action -Action 'DISM' -Target 'RestoreHealth' -Result 'WhatIf'
+    }
+  }
+
+  if ($RunSFC) {
+    $warnings.Add('Running sfc /scannow can take time and requires admin.') | Out-Null
+    if ($PSCmdlet.ShouldProcess('SFC', 'Run sfc /scannow')) {
+      try {
+        sfc /scannow | Out-String | Out-Null
+        Add-Action -Action 'SFC' -Target 'scannow' -Result 'Completed'
+      } catch {
+        Add-Action -Action 'SFC' -Target 'scannow' -Result "Failed: $($_.Exception.Message)"
+      }
+    } else {
+      Add-Action -Action 'SFC' -Target 'scannow' -Result 'WhatIf'
+    }
+  }
+
+  $summary = [pscustomobject]@{
+    Script = $scriptName
+    Aggressive = [bool]$Aggressive
+    RunDISM = [bool]$RunDISM
+    RunSFC = [bool]$RunSFC
+    Actions = $actions
+    Warnings = $warnings
+    LogPath = $logPath
+  }
+
+  $summary
+}
+finally {
+  Stop-Transcript | Out-Null
+}
