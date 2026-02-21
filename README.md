@@ -6,7 +6,9 @@ A practical library of IT Ops prompt cards and safe endpoint PowerShell scripts.
 ## Quick Start
 - Prereqs: Windows PowerShell 5.1+ or PowerShell 7, admin rights when required by a script.
 - Start here: `prompts/powershell/README.md` and `prompts/powershell/PromptCard_Template.md`.
-- Run a prompt card: open a card under `prompts/powershell/endpoint/`, fill Inputs, and paste into your AI tool. Some scripts already exist in `PowerShell/`. New scripts should be created via a branch/PR.
+- Run a prompt card: open a card under `prompts/powershell/endpoint/`, fill Inputs, paste into your AI tool.
+- Use existing scripts: run scripts under `PowerShell/`.
+- Create new scripts: use a branch/PR and follow `docs/standards.md`.
 
 ## How To Run Scripts
 Windows PowerShell 5.1:
@@ -32,15 +34,16 @@ Note: UNC paths (`\\wsl.localhost\...`) + PowerShell 7 may require `-ExecutionPo
 - `prompts/` — prompt cards and templates for script/runbook generation.
 - `docs/` — standards, workflow, and repo state.
 - `samples/` — sanitized sample inputs/outputs.
-- `scripts/` — batch tasks and workflow notes.
+- `scripts/` — batch tasks and workflow notes (not executable scripts).
 
 ## Safety Notes
 - Prefer `-WhatIf` and `SupportsShouldProcess` where changes occur.
 - Favor rename-to-`.bak` over delete.
+- Default behavior is discovery-only unless you pass an explicit action switch.
 - Never include secrets, tenant IDs, or user emails in scripts or docs.
 
 ## Contribution Workflow
-- Branch from the current working branch, keep changes scoped.
+- Branch from the primary branch (e.g., main), keep changes scoped.
 - Commit style: short, imperative, scoped to the change (example: `Add printer triage prompt card`).
 - PRs should describe changes, risks, and how to run/validate.
 - Standards live in `docs/standards.md` and `AGENTS.md`.
