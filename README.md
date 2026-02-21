@@ -40,6 +40,7 @@ Note: UNC paths (`\\wsl.localhost\...`) + PowerShell 7 may require `-ExecutionPo
 - Prefer `-WhatIf` and `SupportsShouldProcess` where changes occur.
 - Favor rename-to-`.bak` over delete.
 - Default behavior is discovery-only unless you pass an explicit action switch.
+- Code signing guidance: see `docs/security/code-signing.md`.
 - Never include secrets, tenant IDs, or user emails in scripts or docs.
 
 ## Contribution Workflow
