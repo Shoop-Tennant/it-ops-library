@@ -42,6 +42,23 @@ if ($PSVersionTable.PSEdition -eq 'Core') {
   $IsWindowsHost = ($env:OS -eq 'Windows_NT')
 }
 
+if (-not $UserProfile -or $UserProfile.Trim() -eq '') {
+  $UserProfile = $HOME
+}
+if (-not $UserProfile -or $UserProfile.Trim() -eq '') {
+  $UserProfile = [IO.Path]::GetTempPath()
+}
+$UserProfile = [string]$UserProfile
+
+function Join-PathParts {
+  param(
+    [Parameter(Mandatory)][string]$Base,
+    [Parameter(Mandatory)][string[]]$Parts
+  )
+  $segments = @($Base) + @($Parts) | Where-Object { $_ -and $_.Trim() }
+  [System.IO.Path]::Combine([string[]]$segments)
+}
+
 $scriptName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath)
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $TempRoot = @($env:TEMP, $env:TMP, [IO.Path]::GetTempPath()) | Where-Object { $_ -and $_.Trim() } | Select-Object -First 1
@@ -66,6 +83,11 @@ function Add-Action {
   }) | Out-Null
 }
 
+$ostRoots = @(
+  (Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Microsoft', 'Outlook'))
+  (Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Microsoft', 'Office', '16.0', 'Outlook'))
+) | Select-Object -Unique
+
 try {
   if (-not $IsWindowsHost) {
     $warnings.Add('This script targets Windows endpoints; running in non-Windows mode will do discovery only.') | Out-Null
@@ -74,6 +96,7 @@ try {
       UserProfile = $UserProfile
       Rebuild = [bool]$Rebuild
       CloseOutlook = [bool]$CloseOutlook
+      OstRoots = $ostRoots
       OstFiles = @()
       Actions = $actions
       Warnings = $warnings
@@ -88,6 +111,7 @@ try {
       UserProfile = $UserProfile
       Rebuild = [bool]$Rebuild
       CloseOutlook = [bool]$CloseOutlook
+      OstRoots = $ostRoots
       OstFiles = @()
       Actions = $actions
       Warnings = $warnings
@@ -110,11 +134,6 @@ try {
       }
     }
   }
-
-  $ostRoots = @(
-    Join-Path $UserProfile 'AppData\Local\Microsoft\Outlook',
-    Join-Path $UserProfile 'AppData\Local\Microsoft\Office\16.0\Outlook'
-  ) | Select-Object -Unique
 
   $ostFiles = @()
   foreach ($root in $ostRoots) {
@@ -150,6 +169,7 @@ try {
     UserProfile = $UserProfile
     Rebuild = [bool]$Rebuild
     CloseOutlook = [bool]$CloseOutlook
+    OstRoots = $ostRoots
     OstFiles = $ostFiles.FullName
     Actions = $actions
     Warnings = $warnings

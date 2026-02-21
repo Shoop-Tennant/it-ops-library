@@ -38,6 +38,23 @@ if ($PSVersionTable.PSEdition -eq 'Core') {
   $IsWindowsHost = ($env:OS -eq 'Windows_NT')
 }
 
+if (-not $UserProfile -or $UserProfile.Trim() -eq '') {
+  $UserProfile = $HOME
+}
+if (-not $UserProfile -or $UserProfile.Trim() -eq '') {
+  $UserProfile = [IO.Path]::GetTempPath()
+}
+$UserProfile = [string]$UserProfile
+
+function Join-PathParts {
+  param(
+    [Parameter(Mandatory)][string]$Base,
+    [Parameter(Mandatory)][string[]]$Parts
+  )
+  $segments = @($Base) + @($Parts) | Where-Object { $_ -and $_.Trim() }
+  [System.IO.Path]::Combine([string[]]$segments)
+}
+
 $scriptName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath)
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $TempRoot = @($env:TEMP, $env:TMP, [IO.Path]::GetTempPath()) | Where-Object { $_ -and $_.Trim() } | Select-Object -First 1
@@ -62,6 +79,18 @@ function Add-Action {
   }) | Out-Null
 }
 
+$cachePaths = @(
+  (Join-PathParts -Base $UserProfile -Parts @('AppData', 'Roaming', 'Microsoft', 'Teams'))
+  (Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Microsoft', 'Teams'))
+  (Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Packages', 'MSTeams_8wekyb3d8bbwe', 'LocalCache'))
+  (Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Packages', 'MSTeams_8wekyb3d8bbwe', 'LocalState'))
+  (Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Packages', 'MicrosoftTeams_8wekyb3d8bbwe', 'LocalCache'))
+  (Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Packages', 'MicrosoftTeams_8wekyb3d8bbwe', 'LocalState'))
+) | Select-Object -Unique
+
+$classicExe = Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Microsoft', 'Teams', 'current', 'Teams.exe')
+$newExe = Join-PathParts -Base $UserProfile -Parts @('AppData', 'Local', 'Microsoft', 'WindowsApps', 'ms-teams.exe')
+
 try {
   if (-not $IsWindowsHost) {
     $warnings.Add('This script targets Windows endpoints; running in non-Windows mode will do discovery only.') | Out-Null
@@ -69,6 +98,8 @@ try {
       Script = $scriptName
       UserProfile = $UserProfile
       SkipRelaunch = [bool]$SkipRelaunch
+      CachePaths = $cachePaths
+      TeamsExePaths = @($classicExe, $newExe)
       Actions = $actions
       Warnings = $warnings
       LogPath = $logPath
@@ -81,6 +112,8 @@ try {
       Script = $scriptName
       UserProfile = $UserProfile
       SkipRelaunch = [bool]$SkipRelaunch
+      CachePaths = $cachePaths
+      TeamsExePaths = @($classicExe, $newExe)
       Actions = $actions
       Warnings = $warnings
       LogPath = $logPath
@@ -106,15 +139,6 @@ try {
     }
   }
 
-  $cachePaths = @(
-    Join-Path $UserProfile 'AppData\Roaming\Microsoft\Teams',
-    Join-Path $UserProfile 'AppData\Local\Microsoft\Teams',
-    Join-Path $UserProfile 'AppData\Local\Packages\MSTeams_8wekyb3d8bbwe\LocalCache',
-    Join-Path $UserProfile 'AppData\Local\Packages\MSTeams_8wekyb3d8bbwe\LocalState',
-    Join-Path $UserProfile 'AppData\Local\Packages\MicrosoftTeams_8wekyb3d8bbwe\LocalCache',
-    Join-Path $UserProfile 'AppData\Local\Packages\MicrosoftTeams_8wekyb3d8bbwe\LocalState'
-  ) | Select-Object -Unique
-
   foreach ($path in $cachePaths) {
     if (Test-Path -LiteralPath $path) {
       if ($PSCmdlet.ShouldProcess($path, 'Remove Teams cache contents')) {
@@ -133,9 +157,6 @@ try {
   }
 
   if (-not $SkipRelaunch) {
-    $classicExe = Join-Path $UserProfile 'AppData\Local\Microsoft\Teams\current\Teams.exe'
-    $newExe = Join-Path $UserProfile 'AppData\Local\Microsoft\WindowsApps\ms-teams.exe'
-
     if (Test-Path -LiteralPath $newExe) {
       if ($PSCmdlet.ShouldProcess($newExe, 'Start Teams (new)')) {
         try {
@@ -167,6 +188,8 @@ try {
     Script = $scriptName
     UserProfile = $UserProfile
     SkipRelaunch = [bool]$SkipRelaunch
+    CachePaths = $cachePaths
+    TeamsExePaths = @($classicExe, $newExe)
     Actions = $actions
     Warnings = $warnings
     LogPath = $logPath
