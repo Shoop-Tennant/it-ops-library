@@ -91,6 +91,7 @@ try {
   $printers = @()
   $ports = @()
   try {
+    Import-Module PrintManagement -Verbose:$false -ErrorAction Stop
     if (Get-Command Get-Printer -ErrorAction SilentlyContinue) {
       $printers = Get-Printer -ErrorAction SilentlyContinue
     } else {
