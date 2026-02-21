@@ -28,6 +28,14 @@ Collect a lightweight diagnostics bundle and zip it for sharing.
 - Script in a single code block
 - Then instructions + checklist
 
+## Run Commands
+- Windows PowerShell 5.1:
+  - `Set-ExecutionPolicy -Scope Process Bypass`
+  - `& "./PowerShell/Get-DiagnosticsBundle.ps1" -Verbose`
+- PowerShell 7:
+  - `pwsh -ExecutionPolicy Bypass -File "./PowerShell/Get-DiagnosticsBundle.ps1" -Verbose`
+- If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
+
 ## Example inputs
 ```powershell
 # Default output to %TEMP%

@@ -42,6 +42,14 @@ Triage common printer issues by checking spooler health, listing print queues, a
 - Script in a single code block
 - Then instructions + checklist
 
+## Run Commands
+- Windows PowerShell 5.1:
+  - `Set-ExecutionPolicy -Scope Process Bypass`
+  - `& "./PowerShell/Invoke-PrinterTriage.ps1" -Verbose`
+- PowerShell 7:
+  - `pwsh -ExecutionPolicy Bypass -File "./PowerShell/Invoke-PrinterTriage.ps1" -Verbose`
+- If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
+
 ## Validation checklist
 - [ ] Spooler service status reported correctly
 - [ ] All printers listed with status and port info
