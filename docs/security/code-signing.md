@@ -13,8 +13,12 @@ PowerShell 7 often treats scripts on UNC paths (for example, `\\wsl.localhost\..
 ## Dev Path (Personal PC)
 For local development and testing:
 1. Create a self-signed code-signing certificate in `Cert:\CurrentUser\My`.
-2. Add the cert to `Cert:\CurrentUser\TrustedPublisher`.
+2. Import the cert into both:
+   - `Cert:\CurrentUser\TrustedPublisher`
+   - `Cert:\CurrentUser\Root`
 3. Use that certificate thumbprint to sign scripts.
+
+Note: Without Root trust, signatures may appear untrusted or show `UnknownError` even if signing succeeded.
 
 ## How to Sign
 Use `Set-AuthenticodeSignature` with a certificate thumbprint.
@@ -31,6 +35,7 @@ Use `Get-AuthenticodeSignature` to check status and signer.
 Remove the dev cert from:
 - `Cert:\CurrentUser\My`
 - `Cert:\CurrentUser\TrustedPublisher`
+- `Cert:\CurrentUser\Root`
 
 ## Warnings
 - Never commit certificates or private keys.
