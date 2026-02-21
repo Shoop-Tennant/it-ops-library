@@ -31,10 +31,24 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+$IsWindowsHost = $true
+if ($PSVersionTable.PSEdition -eq 'Core') {
+  $IsWindowsHost = $IsWindows
+} else {
+  $IsWindowsHost = ($env:OS -eq 'Windows_NT')
+}
+
 $scriptName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath)
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$logPath = Join-Path $env:TEMP ("{0}-{1}.log" -f $scriptName, $timestamp)
-Start-Transcript -Path $logPath | Out-Null
+$TempRoot = @($env:TEMP, $env:TMP, [IO.Path]::GetTempPath()) | Where-Object { $_ -and $_.Trim() } | Select-Object -First 1
+$null = New-Item -ItemType Directory -Path $TempRoot -Force
+$logPath = Join-Path $TempRoot ("{0}-{1}.log" -f $scriptName, $timestamp)
+
+$TranscriptStarted = $false
+if ((Get-Command Start-Transcript -ErrorAction SilentlyContinue) -and ($WhatIfPreference -eq $false)) {
+  Start-Transcript -Path $logPath | Out-Null
+  $TranscriptStarted = $true
+}
 
 $actions = New-Object System.Collections.Generic.List[object]
 $warnings = New-Object System.Collections.Generic.List[string]
@@ -49,12 +63,36 @@ function Add-Action {
 }
 
 try {
-  if (-not (Test-Path -LiteralPath $UserProfile)) {
-    throw "UserProfile path not found: $UserProfile"
+  if (-not $IsWindowsHost) {
+    $warnings.Add('This script targets Windows endpoints; running in non-Windows mode will do discovery only.') | Out-Null
+    return [pscustomobject]@{
+      Script = $scriptName
+      UserProfile = $UserProfile
+      SkipRelaunch = [bool]$SkipRelaunch
+      Actions = $actions
+      Warnings = $warnings
+      LogPath = $logPath
+    }
+  }
+
+  if (-not $UserProfile -or -not (Test-Path -LiteralPath $UserProfile)) {
+    $warnings.Add("UserProfile path not found: $UserProfile") | Out-Null
+    return [pscustomobject]@{
+      Script = $scriptName
+      UserProfile = $UserProfile
+      SkipRelaunch = [bool]$SkipRelaunch
+      Actions = $actions
+      Warnings = $warnings
+      LogPath = $logPath
+    }
   }
 
   $teamsProcesses = @('Teams', 'ms-teams', 'TeamsClassic', 'TeamsBootstrapper', 'Teams.exe', 'ms-teams.exe')
-  $running = Get-Process -ErrorAction SilentlyContinue | Where-Object { $teamsProcesses -contains $_.Name }
+  $running = @()
+  if (Get-Command Get-Process -ErrorAction SilentlyContinue) {
+    $running = Get-Process -ErrorAction SilentlyContinue | Where-Object { $teamsProcesses -contains $_.Name }
+  }
+
   foreach ($p in $running) {
     if ($PSCmdlet.ShouldProcess($p.Name, 'Stop Teams process')) {
       try {
@@ -125,7 +163,7 @@ try {
     }
   }
 
-  $summary = [pscustomobject]@{
+  [pscustomobject]@{
     Script = $scriptName
     UserProfile = $UserProfile
     SkipRelaunch = [bool]$SkipRelaunch
@@ -133,9 +171,9 @@ try {
     Warnings = $warnings
     LogPath = $logPath
   }
-
-  $summary
 }
 finally {
-  Stop-Transcript | Out-Null
+  if ($TranscriptStarted -and (Get-Command Stop-Transcript -ErrorAction SilentlyContinue)) {
+    Stop-Transcript | Out-Null
+  }
 }

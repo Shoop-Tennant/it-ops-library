@@ -35,10 +35,24 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+$IsWindowsHost = $true
+if ($PSVersionTable.PSEdition -eq 'Core') {
+  $IsWindowsHost = $IsWindows
+} else {
+  $IsWindowsHost = ($env:OS -eq 'Windows_NT')
+}
+
 $scriptName = [IO.Path]::GetFileNameWithoutExtension($PSCommandPath)
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$logPath = Join-Path $env:TEMP ("{0}-{1}.log" -f $scriptName, $timestamp)
-Start-Transcript -Path $logPath | Out-Null
+$TempRoot = @($env:TEMP, $env:TMP, [IO.Path]::GetTempPath()) | Where-Object { $_ -and $_.Trim() } | Select-Object -First 1
+$null = New-Item -ItemType Directory -Path $TempRoot -Force
+$logPath = Join-Path $TempRoot ("{0}-{1}.log" -f $scriptName, $timestamp)
+
+$TranscriptStarted = $false
+if ((Get-Command Start-Transcript -ErrorAction SilentlyContinue) -and ($WhatIfPreference -eq $false)) {
+  Start-Transcript -Path $logPath | Out-Null
+  $TranscriptStarted = $true
+}
 
 $actions = New-Object System.Collections.Generic.List[object]
 $warnings = New-Object System.Collections.Generic.List[string]
@@ -53,13 +67,40 @@ function Add-Action {
 }
 
 try {
-  $spooler = Get-Service -Name Spooler -ErrorAction SilentlyContinue
+  if (-not $IsWindowsHost) {
+    $warnings.Add('This script targets Windows endpoints; running in non-Windows mode will do discovery only.') | Out-Null
+    return [pscustomobject]@{
+      Script = $scriptName
+      SpoolerStatus = $null
+      Printers = @()
+      Ports = @()
+      RecentPrintEvents = @()
+      Actions = $actions
+      Warnings = $warnings
+      LogPath = $logPath
+    }
+  }
+
+  $spooler = $null
+  if (Get-Command Get-Service -ErrorAction SilentlyContinue) {
+    $spooler = Get-Service -Name Spooler -ErrorAction SilentlyContinue
+  } else {
+    $warnings.Add('Get-Service not available; skipping spooler status.') | Out-Null
+  }
 
   $printers = @()
   $ports = @()
   try {
-    $printers = Get-Printer -ErrorAction SilentlyContinue
-    $ports = Get-PrinterPort -ErrorAction SilentlyContinue
+    if (Get-Command Get-Printer -ErrorAction SilentlyContinue) {
+      $printers = Get-Printer -ErrorAction SilentlyContinue
+    } else {
+      $warnings.Add('Get-Printer not available; skipping printer list.') | Out-Null
+    }
+    if (Get-Command Get-PrinterPort -ErrorAction SilentlyContinue) {
+      $ports = Get-PrinterPort -ErrorAction SilentlyContinue
+    } else {
+      $warnings.Add('Get-PrinterPort not available; skipping printer ports.') | Out-Null
+    }
   } catch {
     $warnings.Add('Get-Printer or Get-PrinterPort failed. Printer cmdlets may be unavailable.') | Out-Null
   }
@@ -68,49 +109,63 @@ try {
     $printers = $printers | Where-Object { $_.Name -like "*$PrinterName*" }
   }
 
-  $since = (Get-Date).AddDays(-1)
   $printEvents = @()
-  try {
-    $printEvents = Get-WinEvent -FilterHashtable @{ LogName = 'System'; StartTime = $since } -ErrorAction SilentlyContinue |
-      Where-Object { $_.ProviderName -match 'Print' -or $_.Id -in 307, 805, 808, 842 }
-  } catch {
-    $warnings.Add('Failed to query print-related event logs.') | Out-Null
+  if (Get-Command Get-WinEvent -ErrorAction SilentlyContinue) {
+    $since = (Get-Date).AddDays(-1)
+    try {
+      $printEvents = Get-WinEvent -FilterHashtable @{ LogName = 'System'; StartTime = $since } -ErrorAction SilentlyContinue |
+        Where-Object { $_.ProviderName -match 'Print' -or $_.Id -in 307, 805, 808, 842 }
+    } catch {
+      $warnings.Add('Failed to query print-related event logs.') | Out-Null
+    }
+  } else {
+    $warnings.Add('Get-WinEvent not available; skipping event log query.') | Out-Null
   }
 
   if ($ClearQueue) {
-    $spoolPath = Join-Path $env:WINDIR 'System32\spool\PRINTERS'
-    if ($PSCmdlet.ShouldProcess($spoolPath, 'Clear spooler queue and restart spooler')) {
-      try {
-        if ($spooler.Status -ne 'Stopped') {
-          Stop-Service -Name Spooler -Force -ErrorAction Stop
-          Add-Action -Action 'Stop-Service' -Target 'Spooler' -Result 'Stopped'
+    if ($env:WINDIR) {
+      $spoolPath = Join-Path $env:WINDIR 'System32\spool\PRINTERS'
+      if ($PSCmdlet.ShouldProcess($spoolPath, 'Clear spooler queue and restart spooler')) {
+        try {
+          if ($spooler -and $spooler.Status -ne 'Stopped' -and (Get-Command Stop-Service -ErrorAction SilentlyContinue)) {
+            Stop-Service -Name Spooler -Force -ErrorAction Stop
+            Add-Action -Action 'Stop-Service' -Target 'Spooler' -Result 'Stopped'
+          }
+          Get-ChildItem -LiteralPath $spoolPath -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+          Add-Action -Action 'Clear-Queue' -Target $spoolPath -Result 'Cleared'
+          if (Get-Command Start-Service -ErrorAction SilentlyContinue) {
+            Start-Service -Name Spooler -ErrorAction Stop
+            Add-Action -Action 'Start-Service' -Target 'Spooler' -Result 'Started'
+          }
+        } catch {
+          Add-Action -Action 'Clear-Queue' -Target $spoolPath -Result "Failed: $($_.Exception.Message)"
         }
-        Get-ChildItem -LiteralPath $spoolPath -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-        Add-Action -Action 'Clear-Queue' -Target $spoolPath -Result 'Cleared'
-        Start-Service -Name Spooler -ErrorAction Stop
-        Add-Action -Action 'Start-Service' -Target 'Spooler' -Result 'Started'
-      } catch {
-        Add-Action -Action 'Clear-Queue' -Target $spoolPath -Result "Failed: $($_.Exception.Message)"
+      } else {
+        Add-Action -Action 'Clear-Queue' -Target $spoolPath -Result 'WhatIf'
       }
     } else {
-      Add-Action -Action 'Clear-Queue' -Target $spoolPath -Result 'WhatIf'
+      $warnings.Add('WINDIR not set; skipping spooler queue clear.') | Out-Null
     }
   } elseif ($RestartSpooler) {
     if ($PSCmdlet.ShouldProcess('Spooler', 'Restart Print Spooler service')) {
-      try {
-        Restart-Service -Name Spooler -Force -ErrorAction Stop
-        Add-Action -Action 'Restart-Service' -Target 'Spooler' -Result 'Restarted'
-      } catch {
-        Add-Action -Action 'Restart-Service' -Target 'Spooler' -Result "Failed: $($_.Exception.Message)"
+      if (Get-Command Restart-Service -ErrorAction SilentlyContinue) {
+        try {
+          Restart-Service -Name Spooler -Force -ErrorAction Stop
+          Add-Action -Action 'Restart-Service' -Target 'Spooler' -Result 'Restarted'
+        } catch {
+          Add-Action -Action 'Restart-Service' -Target 'Spooler' -Result "Failed: $($_.Exception.Message)"
+        }
+      } else {
+        $warnings.Add('Restart-Service not available; skipping spooler restart.') | Out-Null
       }
     } else {
       Add-Action -Action 'Restart-Service' -Target 'Spooler' -Result 'WhatIf'
     }
   }
 
-  $summary = [pscustomobject]@{
+  [pscustomobject]@{
     Script = $scriptName
-    SpoolerStatus = $spooler.Status
+    SpoolerStatus = if ($spooler) { $spooler.Status } else { $null }
     Printers = $printers | Select-Object Name, DriverName, PortName, ShareName, Status
     Ports = $ports | Select-Object Name, PrinterHostAddress, PortNumber, Protocol
     RecentPrintEvents = $printEvents | Select-Object TimeCreated, Id, ProviderName, Message
@@ -118,9 +173,9 @@ try {
     Warnings = $warnings
     LogPath = $logPath
   }
-
-  $summary
 }
 finally {
-  Stop-Transcript | Out-Null
+  if ($TranscriptStarted -and (Get-Command Stop-Transcript -ErrorAction SilentlyContinue)) {
+    Stop-Transcript | Out-Null
+  }
 }
