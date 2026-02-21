@@ -36,6 +36,13 @@ Collect a lightweight diagnostics bundle and zip it for sharing.
   - `pwsh -ExecutionPolicy Bypass -File "./PowerShell/Get-DiagnosticsBundle.ps1" -Verbose`
 - If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
 
+## NinjaOne / Remote Runbook Notes
+- Run context: SYSTEM is fine (collects machine-level data); user context not required.
+- `-UserProfile`: Not applicable.
+- L1/L2 safety: Do not include event logs without approval in regulated environments; avoid large `Days` values unless requested.
+- Escalate if: Script fails to write output or zip, or logs indicate access denied.
+- Expected outputs: `LogPath` and `ZipPath` in summary; zip contains collected diagnostics.
+
 ## Example inputs
 ```powershell
 # Default output to %TEMP%

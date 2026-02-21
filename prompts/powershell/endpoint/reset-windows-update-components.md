@@ -36,6 +36,13 @@ Reset Windows Update components safely with optional advanced steps.
   - `pwsh -ExecutionPolicy Bypass -File "./PowerShell/Reset-WindowsUpdateComponents.ps1" -Verbose`
 - If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
 
+## NinjaOne / Remote Runbook Notes
+- Run context: SYSTEM is required for service control and folder renames.
+- `-UserProfile`: Not applicable.
+- L1/L2 safety: Do not use `-Aggressive`, `-RunDISM`, or `-RunSFC` without approval or a change window.
+- Escalate if: Services fail to stop/start, rename fails, or updates still fail after reset.
+- Expected outputs: `LogPath` in summary; folders are renamed with `.old.<timestamp>`.
+
 ## Example inputs
 ```powershell
 # Standard safe reset

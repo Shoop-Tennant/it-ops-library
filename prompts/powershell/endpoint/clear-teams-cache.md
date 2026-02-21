@@ -36,6 +36,13 @@ Clear Microsoft Teams cache safely for a user and optionally relaunch Teams.
   - `pwsh -ExecutionPolicy Bypass -File "./PowerShell/Clear-TeamsCache.ps1" -Verbose`
 - If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
 
+## NinjaOne / Remote Runbook Notes
+- Run context: User context preferred to target the active profile; SYSTEM only when user context is unavailable.
+- `-UserProfile`: Pass when running as SYSTEM or targeting a specific user; retrieve from `C:\Users\<name>` or NinjaOne device/user inventory.
+- L1/L2 safety: Avoid forcing relaunch in shared sessions without user confirmation; do not add any destructive switches beyond cache clearing.
+- Escalate if: Cache clears but Teams still fails to launch/sign in, or profile path does not exist.
+- Expected outputs: `LogPath` in summary; no data deletion beyond cache contents.
+
 ## Example inputs
 ```powershell
 # Current user, relaunch Teams

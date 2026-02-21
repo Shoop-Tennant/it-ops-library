@@ -50,6 +50,13 @@ Triage common printer issues by checking spooler health, listing print queues, a
   - `pwsh -ExecutionPolicy Bypass -File "./PowerShell/Invoke-PrinterTriage.ps1" -Verbose`
 - If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
 
+## NinjaOne / Remote Runbook Notes
+- Run context: SYSTEM is OK; no user profile needed for spooler actions.
+- `-UserProfile`: Not applicable.
+- L1/L2 safety: Do not use `-ClearQueue` or `-RestartSpooler` without approval in shared print environments.
+- Escalate if: Spooler crashes repeatedly, print drivers are corrupt, or server-side queues are impacted.
+- Expected outputs: `LogPath` in summary; queue clears are destructive to pending jobs.
+
 ## Validation checklist
 - [ ] Spooler service status reported correctly
 - [ ] All printers listed with status and port info

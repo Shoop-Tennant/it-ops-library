@@ -36,6 +36,13 @@ Detect Outlook OST files and optionally rename them to force a rebuild.
   - `pwsh -ExecutionPolicy Bypass -File "./PowerShell/Repair-OutlookOst.ps1" -Verbose`
 - If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
 
+## NinjaOne / Remote Runbook Notes
+- Run context: User context preferred; SYSTEM requires `-UserProfile` to target the correct profile.
+- `-UserProfile`: Pass when running as SYSTEM or fixing a different user; use `C:\Users\<name>` from device/user inventory.
+- L1/L2 safety: Do not use `-Rebuild` without user approval; always try detection first.
+- Escalate if: OST rebuild fails, Outlook won't launch after rename, or profile path is missing.
+- Expected outputs: `LogPath` in summary; OST is renamed to `.bak` (not deleted).
+
 ## Example inputs
 ```powershell
 # Detect OST files only
