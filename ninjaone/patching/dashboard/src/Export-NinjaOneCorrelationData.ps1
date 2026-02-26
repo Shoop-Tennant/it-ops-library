@@ -585,8 +585,18 @@ function To-BoolText {
   return ''
 }
 
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
-$defaultRawDir = Join-Path $repoRoot 'ninjaone/patching/dashboard/samples/raw'
+$repoRoot = $null
+try {
+  $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..') -ErrorAction Stop).Path
+} catch {
+  $repoRoot = $null
+}
+
+$defaultRawDir = if ($repoRoot) {
+  Join-Path $repoRoot 'ninjaone/patching/dashboard/samples/raw'
+} else {
+  Join-Path $PSScriptRoot 'samples/raw'
+}
 $OutputDir = if ($OutputDir) { $OutputDir } else { $defaultRawDir }
 if (-not (Test-Path $OutputDir)) { New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null }
 
