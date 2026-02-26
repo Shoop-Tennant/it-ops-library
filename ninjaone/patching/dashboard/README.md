@@ -45,6 +45,25 @@ pwsh ninjaone/patching/dashboard/src/PatchOperationsDashboard.ps1 -ReportMonth "
 
 The first run prompts for OAuth authorization in a browser and stores tokens securely for subsequent runs.
 
+## API Export for Migration Evidence
+To build SCCM-vs-NinjaOne comparison inputs from live NinjaOne API data, run:
+
+```powershell
+pwsh ninjaone/patching/dashboard/src/Export-NinjaOneCorrelationData.ps1
+```
+
+Outputs are written to `ninjaone/patching/dashboard/samples/raw/`:
+- `ninjaone_devices_<timestamp>.csv`
+- `ninjaone_patching_by_device_<timestamp>.csv`
+- `ninjaone_vulnerabilities_<timestamp>.csv` (best-effort endpoint data, endpoint mapping depends on available API endpoint)
+- `endpoint_crosswalk.template_<timestamp>.csv` (fill `AssetName` to map to Lansweeper/Arctic Wolf keys)
+- `manifest.ninjaone_api_<timestamp>.yml`
+- `ninjaone_api_pull_summary_<timestamp>.json`
+
+Optional:
+- `-IncludeRawEventExports` writes full OS/software patch event JSON snapshots.
+- `-OutputDir <path>` writes to a custom folder.
+
 ## Parameters
 - `-ReportMonth "MMMM yyyy"`: Target reporting month. Defaults to current month.
 - `-ClientId`, `-ClientSecret`, `-Instance`: Override custom fields.
