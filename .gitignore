@@ -6,3 +6,16 @@
 *.cred
 .env
 node_modules/
+
+# Windows junk
+*.lnk
+*:Zone.Identifier
+*:sec.endpointdlp
+
+# Sensitive / private data — never commit
+**/_private/
+
+# Generated run outputs — timestamped artifacts, not source
+ninjaone/patching/dashboard/samples/raw/
+ninjaone/patching/dashboard/samples/output/
+ninjaone/patching/dashboard/samples/sanitized/
