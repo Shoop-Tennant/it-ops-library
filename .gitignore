@@ -19,3 +19,8 @@ node_modules/
 ninjaone/patching/dashboard/samples/raw/
 ninjaone/patching/dashboard/samples/output/
 ninjaone/patching/dashboard/samples/sanitized/
+
+# Large data exports — store in SharePoint/OneDrive, not git
+ninjaone/patching/dashboard/docs/*.csv
+ninjaone/patching/dashboard/docs/*.xlsx
+ninjaone/patching/dashboard/docs/*.pdf
