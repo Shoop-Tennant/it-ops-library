@@ -9,8 +9,11 @@ node_modules/
 
 # Windows junk
 *.lnk
+# ADS metadata - colon represented as U+F03A by git on Windows, so match both forms
 *:Zone.Identifier
+*?Zone.Identifier
 *:sec.endpointdlp
+*?sec.endpointdlp
 
 # Sensitive / private data — never commit
 **/_private/
