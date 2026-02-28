@@ -11,7 +11,8 @@ Maintained for Windows-first environments — Intune · NinjaOne · Azure · Zeb
 it-ops-library/
 ├── powershell/
 │   ├── functions/          Shared functions — dot-source into scripts
-│   └── tools/              Runnable entry-point scripts
+│   ├── tools/              Runnable entry-point scripts
+│   └── tests/              Pester unit + integration tests
 ├── prompts/
 │   └── powershell/
 │       ├── _template.md    Blank Prompt Card — copy to start a new card
@@ -69,6 +70,30 @@ pwsh ./powershell/tools/Sanitize-File.ps1 -Path ./export.txt -WhatIf
 
 Outputs a summary table showing redaction counts per pattern type.
 See `samples/sanitization/` for synthetic test fixtures (input → expected output).
+
+---
+
+## Running Tests
+
+Tests use [Pester 5](https://pester.dev). Install once if missing:
+
+```powershell
+Install-Module Pester -Force -Scope CurrentUser
+```
+
+Run all tests from the repo root:
+
+```powershell
+Invoke-Pester ./powershell/tests/ -Output Detailed
+```
+
+Run a single test file:
+
+```powershell
+Invoke-Pester ./powershell/tests/Remove-PiiFromString.Tests.ps1 -Output Detailed
+```
+
+Tests live in `powershell/tests/` and use synthetic fixtures from `samples/sanitization/` — no real data required.
 
 ---
 

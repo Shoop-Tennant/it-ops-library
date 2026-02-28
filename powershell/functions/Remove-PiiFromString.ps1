@@ -22,10 +22,13 @@ function Remove-PiiFromString {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
+        [AllowEmptyString()]
         [string]$InputText
     )
 
     process {
+        if ($InputText -eq '') { return '' }
+
         $redacted = $InputText
 
         # Email addresses
