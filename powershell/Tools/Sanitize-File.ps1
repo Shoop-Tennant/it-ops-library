@@ -9,10 +9,10 @@
   Supported: .txt, .log, .md, .csv (anything line-oriented)
 
 .EXAMPLE
-  pwsh ./PowerShell/Tools/Sanitize-File.ps1 -Path ./export.txt
+  pwsh ./powershell/Tools/Sanitize-File.ps1 -Path ./export.txt
 
 .EXAMPLE
-  pwsh ./PowerShell/Tools/Sanitize-File.ps1 -Path ./export.txt -OutPath ./export.sanitized.txt
+  pwsh ./powershell/Tools/Sanitize-File.ps1 -Path ./export.txt -OutPath ./export.sanitized.txt
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
