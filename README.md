@@ -11,7 +11,7 @@ Maintained for Windows-first environments — Intune · NinjaOne · Azure · Zeb
 it-ops-library/
 ├── powershell/
 │   ├── functions/          Shared functions — dot-source into scripts
-│   └── Tools/              Runnable entry-point scripts
+│   └── tools/              Runnable entry-point scripts
 ├── prompts/
 │   └── powershell/
 │       ├── _template.md    Blank Prompt Card — copy to start a new card
@@ -58,13 +58,13 @@ Redacts common PII from any line-oriented text file (logs, exports, ticket paste
 
 ```powershell
 # Basic — writes <filename>.sanitized.<ext> alongside the source
-pwsh ./powershell/Tools/Sanitize-File.ps1 -Path ./export.txt
+pwsh ./powershell/tools/Sanitize-File.ps1 -Path ./export.txt
 
 # Custom output path
-pwsh ./powershell/Tools/Sanitize-File.ps1 -Path ./export.txt -OutPath ./safe-export.txt
+pwsh ./powershell/tools/Sanitize-File.ps1 -Path ./export.txt -OutPath ./safe-export.txt
 
 # Dry run — preview redaction counts, no file written
-pwsh ./powershell/Tools/Sanitize-File.ps1 -Path ./export.txt -WhatIf
+pwsh ./powershell/tools/Sanitize-File.ps1 -Path ./export.txt -WhatIf
 ```
 
 Outputs a summary table showing redaction counts per pattern type.
@@ -89,5 +89,5 @@ See [`CLAUDE.md`](./CLAUDE.md) for the full working agreement.
 - **Naming:** PowerShell `Verb-Noun`; files `intent-forward-kebab-case.ps1`; folders lowercase
 - **No real data:** no internal hostnames, tenant IDs, serials, ticket numbers, or usernames in committed files
 - **Prompt Cards:** add to `prompts/powershell/<category>/` — copy `_template.md` to start
-- **Sensitive patterns:** use `powershell/Tools/Sanitize-File.ps1` to scrub before committing examples
+- **Sensitive patterns:** use `powershell/tools/Sanitize-File.ps1` to scrub before committing examples
 - **Tests:** add Pester tests to `powershell/tests/` for any new functions
