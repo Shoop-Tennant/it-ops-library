@@ -21,7 +21,8 @@ it-ops-library/
 │   └── sanitization/       Synthetic test fixtures (input → expected output)
 └── docs/
     ├── QUEST_LOG.md        Roadmap and session notes
-    └── ENVIRONMENT.md      Dev environment baseline
+    ├── ENVIRONMENT.md      Dev environment baseline
+    └── decisions/          Architecture Decision Records (ADRs)
 ```
 
 ---
