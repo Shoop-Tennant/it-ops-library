@@ -1,10 +1,10 @@
-# Patch Operations Dashboard - All Organizations - February 2026
+# Patch Operations Dashboard - Contoso Internal - February 2026
 
 **Reporting Month:** February 2026
 
 ## Executive Summary
-- **OS Patches:** Scanned 19, Missing 1, Installed 4000, Failed 2
-- **Software Patches:** Scanned 23, Missing 1706, Installed 196, Failed 2
+- **OS Patches:** Scanned 18, Missing 1, Installed 3894, Failed 2
+- **Software Patches:** Scanned 22, Missing 1612, Installed 176, Failed 2
 
 ## Top Offenders
 - CTSO-PC01 (Missing/Failed: 101)

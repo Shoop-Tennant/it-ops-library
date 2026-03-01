@@ -1,15 +1,27 @@
+You are absolutely right. The "TrueNAS VM" section is outdated because we switched to the **WSL2 (Local) + NAS (Backup)** model.
+
+Here is the **corrected, final version** of `CLAUDE.md`.
+
+I have updated the **Execution Environment** section to match your actual setup:
+
+1. **Host:** Local WSL2 (Ubuntu).
+2. **Backup:** Mapped Z: Drive (TrueNAS).
+3. **Git:** Added your specific handle (`Shoop-Tennant`) so Claude knows who you are.
+
+**Copy this entire block and overwrite your current file:**
+
+```markdown
 # CLAUDE.md — Jeremy Shoop (IT Systems Analyst / Team Lead)
 
-> **Purpose:** Working agreement for how Claude should generate **code**, **runbooks**, **KB articles**, and **leadership artifacts** that fit Jeremy's real environment (Azure/Intune/Terraform/NinjaOne/Lansweeper/BMC Helix/SAP + printing).
+> **Purpose:** Working agreement for how Claude should generate **code**, **runbooks**, **KB articles**, and **leadership artifacts** that fit Jeremy’s real environment (Azure/Intune/Terraform/NinjaOne/Lansweeper/BMC Helix/SAP + printing).
 
 ---
 
 ## 0) Operating Context (for better assumptions)
-
 - Corporate IT Ops / Systems Analysis supporting global sites (NA/APAC/EMEA).
 - Company builds industrial floor cleaning machines; mix of **end-user**, **manufacturing**, and **warehouse** workflows.
 - Frequent support domains: **Intune + mobile**, **Zebra printing**, **SAP S/4HANA**, **device lifecycle**, **CMDB/reporting**.
-- "Paste-ready" output is the goal (tickets/Teams/KB/runbooks/scripts).
+- “Paste-ready” output is the goal (tickets/Teams/KB/runbooks/scripts).
 
 ---
 
@@ -34,15 +46,13 @@
 - **VS Code + Git** (scripts, prompt libraries, markdown KB/runbooks)
 
 ### Execution Environment (The "Dev Box")
-- **Primary Host:** Windows (native) — `C:\Users\jsp6\git\`
-- **WSL2 (Ubuntu):** Available but not primary; VPN can disrupt WSL2 networking — use native Windows when on VPN.
-- **Editor:** VS Code (Windows-native)
-- **Backup Strategy:** Active work in `C:\Users\jsp6\git\`, mirrored to `Z:\Claude\Work_Backups` (TrueNAS) via Robocopy.
+- **Primary Host:** Local WSL2 Container (Ubuntu) on Windows PC.
+- **Access Method:** VS Code "Connect to WSL" extension.
+- **Backup Strategy:** Active work in `~/git/` (WSL NVMe), mirrored to `Z:\Claude\Work_Backups` (TrueNAS) via Robocopy.
 - **Version Control:** GitHub User `Shoop-Tennant` (Private Repos).
-- **Implications:**
-  - PowerShell is `powershell.exe` (Windows 5.1) or `pwsh` (PowerShell 7).
-  - File paths use backslashes on Windows (`C:\Users\jsp6\git\`).
-  - Local Azure auth: `az login` (Windows) or `az login --use-device-code` (WSL/headless).
+- **Implication:** - PowerShell is `pwsh` (Linux core), not `powershell.exe`.
+  - File paths use forward slashes (`/home/jshoop/git/`).
+  - Local Azure auth requires `az login --use-device-code`.
 
 ---
 
@@ -56,8 +66,9 @@
 - Files: intent-forward names (e.g., `New-ZebraPrinters-FromCsv.ps1`)
 
 ### Error handling
-- Scripts: default to `$ErrorActionPreference = 'Stop'`
-- Use `Try/Catch` around any "real" action (installs, deletes, network calls, API, print server changes).
+- Scripts: default to
+  - `$ErrorActionPreference = 'Stop'`
+- Use `Try/Catch` around any “real” action (installs, deletes, network calls, API, print server changes).
 - Prefer idempotency: detect existing state before writing changes.
 - Fail loud + actionable: `throw` with short operator guidance + underlying exception details.
 
@@ -138,14 +149,14 @@
 - Symptoms / Trigger
 - Environment / Preconditions
 - Step-by-step (copy/paste commands)
-- Validation ("what good looks like")
+- Validation (“what good looks like”)
 - Rollback / Safety notes
 - References / links
 - Owner + Last verified date
 
 ---
 
-## 6) Leadership / Team-Lead / Manager Mode
+## 6) Leadership / Team-Lead / Manager Mode (Yes — use Claude “code” here too)
 
 > Treat leadership work like an **ops system**: templates, repeatable workflows, metrics, and clear comms.
 
@@ -164,13 +175,13 @@
 - **Vendor/finance support**:
   - quote comparison tables, renewal tracking, licensing cleanup plans, Opex notes
 
-### How Claude should "sound" in leadership mode
+### How Claude should “sound” in leadership mode
 - Concise, professional, operator tone
 - Bias to clarity: owners, dates, decisions, and next steps
-- No fluff; don't over-explain standard stuff
+- No fluff; don’t over-explain standard stuff
 - If ambiguous: make a best guess and state assumptions explicitly
 
-### "Claude Code" leadership automations (examples)
+### “Claude Code” leadership automations (examples)
 - Turn exports into leadership summaries:
   - Jira/BMC export → weekly dashboard + top blockers
   - Lansweeper export → lifecycle counts by site/cost center
@@ -192,7 +203,7 @@
 
 ### Reasoning
 - Explain non-obvious choices (cmdlet/flag/order-of-ops)
-- Don't explain basic syntax unless asked
+- Don’t explain basic syntax unless asked
 - Always include validation + rollback notes when changes are involved
 
 ### Safety / privacy
@@ -205,41 +216,24 @@
 ## 8) Quick Templates (copy/paste)
 
 ### Weekly status (team lead)
-- **Wins:**
-- **In-progress:**
-- **Risks/Blockers:**
-- **Next week focus:**
-- **Asks / Decisions needed:**
-
-### 1:1 agenda
-- **Quick personal check-in (2 min)**
-- **Wins since last time**
-- **Blockers / where I can help**
-- **Growth / learning focus**
-- **Commitments before next 1:1** (owner + date)
+- **Wins:** - **In-progress:** - **Risks/Blockers:** - **Next week focus:** - **Asks / Decisions needed:** ### 1:1 agenda
+- **Quick personal check-in (2 min)** - **Wins since last time** - **Blockers / where I can help** - **Growth / learning focus** - **Commitments before next 1:1** (owner + date)
 
 ### Decision log entry
-- **Date:**
-- **Decision:**
-- **Rationale:**
-- **Owner:**
-- **Impacted systems/teams:**
-- **Follow-ups:**
+- **Date:** - **Decision:** - **Rationale:** - **Owner:** - **Impacted systems/teams:** - **Follow-ups:** ```
 
----
-
+```
 ## Shell Cheat Sheet (Bash vs PowerShell)
 
 ### How to tell which shell you're in
 - **Bash (WSL):** prompt looks like `jeremy@Shoop:~/...$`
-- **PowerShell:** prompt looks like `PS C:\Users\jsp6\...>`
+- **PowerShell:** prompt looks like `PS /home/jeremy/...>`
 
 ### Rule of thumb
 - If you see **here-doc syntax** like `<<EOF` or `<<'EOF'` → run in **Bash**
 - If you see **PowerShell here-string** like `@' ... '@` → run in **PowerShell**
 
 ### Creating files safely
-
 **Bash (WSL):**
 ```bash
 cat > path/to/file.md <<'EOF'
@@ -254,7 +248,7 @@ content here
 '@ | Set-Content -LiteralPath path\to\file.md -Encoding utf8
 ```
 
-### Common mistake
+### Common mistake (what happened to us)
 - Copying the **bash file-creation command** into a `.ps1` file makes PowerShell throw parser errors.
 - `.ps1` files must contain **PowerShell code only**.
 
