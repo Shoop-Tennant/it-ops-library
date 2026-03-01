@@ -9,10 +9,10 @@
   Supported: .txt, .log, .md, .csv (anything line-oriented)
 
 .EXAMPLE
-  pwsh ./powershell/tools/Sanitize-File.ps1 -Path ./export.txt
+  pwsh ./PowerShell/Tools/Sanitize-File.ps1 -Path ./export.txt
 
 .EXAMPLE
-  pwsh ./powershell/tools/Sanitize-File.ps1 -Path ./export.txt -OutPath ./export.sanitized.txt
+  pwsh ./PowerShell/Tools/Sanitize-File.ps1 -Path ./export.txt -OutPath ./export.sanitized.txt
 #>
 
 [CmdletBinding(SupportsShouldProcess)]
@@ -38,7 +38,7 @@ if (-not $OutPath -or [string]::IsNullOrWhiteSpace($OutPath)) {
 $outFile = $OutPath
 
 # Dot-source the function
-$fnPath = Join-Path $PSScriptRoot '../functions/Remove-PiiFromString.ps1'
+$fnPath = Join-Path $PSScriptRoot '../Functions/Remove-PiiFromString.ps1'
 $fnPath = Resolve-Path -LiteralPath $fnPath
 . $fnPath
 
