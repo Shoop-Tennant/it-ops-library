@@ -9,4 +9,4 @@ This folder holds reusable “Prompt Cards” for generating safe, consistent Po
 - Keep outputs copy/paste-ready for IT Ops tickets/KBs.
 
 ## How to use
-Pick a card, fill in Inputs, paste into Claude/ChatGPT, and save the resulting script under `PowerShell/`.
+Pick a card, fill in Inputs, paste into Claude/ChatGPT, and save the resulting script under `powershell/`.

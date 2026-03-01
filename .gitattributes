@@ -1,0 +1,36 @@
+# ── Default: normalize all text files to LF on checkin ───────────
+* text=auto eol=lf
+
+# ── PowerShell ────────────────────────────────────────────────────
+*.ps1  text eol=lf
+*.psm1 text eol=lf
+*.psd1 text eol=lf
+
+# ── Markdown / docs ───────────────────────────────────────────────
+*.md   text eol=lf
+*.txt  text eol=lf
+
+# ── Terraform ─────────────────────────────────────────────────────
+*.tf      text eol=lf
+*.tfvars  text eol=lf
+
+# ── Data / config ─────────────────────────────────────────────────
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.csv  text eol=lf
+
+# ── Shell scripts ─────────────────────────────────────────────────
+*.sh   text eol=lf
+
+# ── Binary files — no line-ending processing ──────────────────────
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.zip  binary
+*.exe  binary
+*.dll  binary
+*.pfx  binary
+*.p12  binary

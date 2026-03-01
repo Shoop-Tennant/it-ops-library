@@ -1,12 +1,12 @@
 # Prompt Card: Printer Triage (Spooler Reset + Queue Listing + Safe Fixes)
 
 ## Purpose
-Triage common printer issues by checking spooler health, listing print queues, clearing stuck jobs, and applying safe non-destructive fixes. Designed for L1/L2 first-response before escalating to print server or Zebra-specific troubleshooting.
+Triage common printer issues by checking spooler health, listing print queues, and applying safe non-destructive fixes. Designed for L1/L2 first-response before escalating to print server or Zebra-specific troubleshooting.
 
 ## Inputs (fill these in)
 - Environment: (Win10 / Win11 / Server 2019 / Server 2022)
 - Tooling context: (local pwsh, NinjaOne, etc.)
-- Target: `<COMPUTERNAME>` (local or remote)
+- Target: `<COMPUTERNAME>` (local only)
 - Constraints: (requires local admin for spooler restart; non-destructive; no driver changes)
 
 ## Guardrails
@@ -22,7 +22,7 @@ Triage common printer issues by checking spooler health, listing print queues, c
 ## What I want you to produce
 1) PowerShell script (or function) with:
    - comment-based help
-   - clear parameters (`ComputerName`, optional `-ResetSpooler` switch, optional `-ClearStuckJobs` switch)
+   - clear parameters (`PrinterName`, optional `-RestartSpooler` switch, optional `-ClearQueue` switch)
    - try/catch + useful error messages
    - logging (Write-Host or Write-Verbose)
    - diagnostic steps (always run):
@@ -32,8 +32,8 @@ Triage common printer issues by checking spooler health, listing print queues, c
      4. Flag any jobs in Error state
      5. Check for common issues: spooler crash events in System log (last 24h)
    - fix steps (only when switches are passed):
-     1. `-ClearStuckJobs`: Remove jobs in Error state from all queues
-     2. `-ResetSpooler`: Stop Spooler, clear `C:\Windows\System32\spool\PRINTERS\*`, restart Spooler
+     1. `-ClearQueue`: Clear spooler queue and restart spooler
+     2. `-RestartSpooler`: Restart spooler
    - summary output: table of printers, job counts, actions taken
 2) Brief "How to run" instructions
 3) Validation checklist + rollback note
@@ -42,12 +42,27 @@ Triage common printer issues by checking spooler health, listing print queues, c
 - Script in a single code block
 - Then instructions + checklist
 
+## Run Commands
+- Windows PowerShell 5.1:
+  - `Set-ExecutionPolicy -Scope Process Bypass`
+  - `& "./PowerShell/Invoke-PrinterTriage.ps1" -Verbose`
+- PowerShell 7:
+  - `pwsh -ExecutionPolicy Bypass -File "./PowerShell/Invoke-PrinterTriage.ps1" -Verbose`
+- If running from `\\wsl.localhost` UNC paths, PowerShell 7 may require `-ExecutionPolicy Bypass` unless scripts are signed.
+
+## NinjaOne / Remote Runbook Notes
+- Run context: SYSTEM is OK; no user profile needed for spooler actions.
+- `-UserProfile`: Not applicable.
+- L1/L2 safety: Do not use `-ClearQueue` or `-RestartSpooler` without approval in shared print environments.
+- Escalate if: Spooler crashes repeatedly, print drivers are corrupt, or server-side queues are impacted.
+- Expected outputs: `LogPath` in summary; queue clears are destructive to pending jobs.
+
 ## Validation checklist
 - [ ] Spooler service status reported correctly
 - [ ] All printers listed with status and port info
 - [ ] Stuck/error jobs identified and listed
-- [ ] If `-ResetSpooler` used: spooler restarted cleanly, spool folder cleared
-- [ ] If `-ClearStuckJobs` used: error jobs removed, healthy jobs untouched
+- [ ] If `-RestartSpooler` used: spooler restarted cleanly
+- [ ] If `-ClearQueue` used: spooler queue cleared
 - [ ] No printers removed or drivers modified
 - [ ] Output is clean enough to paste into a ticket
 
@@ -58,14 +73,14 @@ Triage common printer issues by checking spooler health, listing print queues, c
 ## Example inputs
 ```powershell
 # Diagnostic only (read-only, no changes)
-.\Invoke-PrinterTriage.ps1 -Verbose
+pwsh ./PowerShell/Invoke-PrinterTriage.ps1 -Verbose
 
-# Diagnostic + clear stuck jobs
-.\Invoke-PrinterTriage.ps1 -ClearStuckJobs -Verbose
+# Restart spooler
+pwsh ./PowerShell/Invoke-PrinterTriage.ps1 -RestartSpooler -Verbose
 
-# Full triage: clear jobs + reset spooler
-.\Invoke-PrinterTriage.ps1 -ClearStuckJobs -ResetSpooler -Verbose
+# Clear spooler queue and restart
+pwsh ./PowerShell/Invoke-PrinterTriage.ps1 -ClearQueue -Verbose
 
-# Remote machine
-.\Invoke-PrinterTriage.ps1 -ComputerName "YOURPC" -Verbose
+# Filter by printer name
+pwsh ./PowerShell/Invoke-PrinterTriage.ps1 -PrinterName "Zebra" -Verbose
 ```
