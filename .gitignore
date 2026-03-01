@@ -61,3 +61,6 @@ desktop.ini
 # ── Local-only config overrides ───────────────────────────────────
 local/
 .local/
+
+# ── Claude Code session data ──────────────────────────────────────
+.claude/
