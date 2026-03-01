@@ -1,8 +1,66 @@
-.DS_Store
+# ── Terraform ─────────────────────────────────────────────────────
 .terraform/
+.terraform.lock.hcl
 *.tfstate
 *.tfstate.backup
-*.log
+terraform.tfvars
+*.auto.tfvars
+
+# ── Credentials & secrets ─────────────────────────────────────────
 *.cred
+*.secret
+*.token
 .env
+secrets/
+.secrets/
+
+# ── Certificates & keys ───────────────────────────────────────────
+*.pfx
+*.p12
+*.pem
+*.cer
+*.key
+
+# ── Logs & transcripts ────────────────────────────────────────────
+*.log
+Logs/
+logs/
+testResults/
+*.testResults.xml
+
+# ── Script / tool outputs (may contain real data) ─────────────────
+*.sanitized
+exports/
+output/
+*.tmp
+
+# ── Data exports (Lansweeper, NinjaOne, Intune, etc.) ────────────
+# Allow synthetic sample CSVs committed under samples/
+*.csv
+*.xlsx
+*.xls
+!samples/**/*.csv
+
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# ── Node ──────────────────────────────────────────────────────────
 node_modules/
+
+# ── OS artifacts ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+
+# ── Local-only config overrides ───────────────────────────────────
+local/
+.local/
+
+# ── Claude Code session data ──────────────────────────────────────
+.claude/
