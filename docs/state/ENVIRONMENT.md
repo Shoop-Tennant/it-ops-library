@@ -25,8 +25,8 @@
 - Script: C:\Workspace\Tools\Backup-WorkspaceToNAS.ps1
 - Run via: ws-backup.cmd
 - Target: \\TRUENAS\jeremy\backups\Workspace
-- Covers: Docs, Inbox (Robocopy /MIR)
-- Does NOT cover: Repos (use GitHub), Secrets, Scratch
+- Covers: Docs, Inbox, Tools, Scratch (Robocopy /MIR)
+- Does NOT cover: Repos (use GitHub), Secrets
 
 ## Git
 - Branch: main
