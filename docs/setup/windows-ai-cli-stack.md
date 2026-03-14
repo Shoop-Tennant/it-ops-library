@@ -20,7 +20,7 @@ Make Windows the primary environment for this repo:
 - **Do not commit** API keys, tokens, cookies, internal domains, hostnames, or share paths.
 - Keep examples sanitized: `example.com`, `server01`, `\\server01\share\...`.
 - Only make file changes inside this repo clone:
-  - `C:\Users\jsp6\git\it-ops-library`
+  - `C:\Users\<username>\git\it-ops-library`
 
 ---
 
@@ -40,8 +40,8 @@ If `winget` is missing: install/update **App Installer** from Microsoft Store, t
 ## Step 1 — Clone the repo on Windows (Primary Clone)
 
 ```powershell
-New-Item -ItemType Directory -Path C:\Users\jsp6\git -Force | Out-Null
-Set-Location C:\Users\jsp6\git
+New-Item -ItemType Directory -Path C:\Users\<username>\git -Force | Out-Null
+Set-Location C:\Users\<username>\git
 
 git clone https://github.com/Shoop-Tennant/it-ops-library.git
 Set-Location .\it-ops-library
@@ -166,7 +166,7 @@ code --version
 Open the repo:
 
 ```powershell
-code C:\Users\jsp6\git\it-ops-library
+code C:\Users\<username>\git\it-ops-library
 ```
 
 ### GitHub CLI (optional but useful)
@@ -183,7 +183,7 @@ gh --version
 From repo root:
 
 ```powershell
-Set-Location C:\Users\jsp6\git\it-ops-library
+Set-Location C:\Users\<username>\git\it-ops-library
 
 git status
 claude --version
@@ -219,7 +219,7 @@ If still missing, confirm the npm global bin path is in PATH:
 
 ```powershell
 npm config get prefix
-# Typical result: C:\Users\jsp6\AppData\Roaming\npm
+# Typical result: C:\Users\<username>\AppData\Roaming\npm
 
 [System.Environment]::GetEnvironmentVariable("PATH", "User")
 ```
@@ -267,7 +267,7 @@ node -v
 
 **ripgrep — portable binary:**
 1. Download `rg.exe` from [github.com/BurntSushi/ripgrep/releases](https://github.com/BurntSushi/ripgrep/releases)
-2. Place in a folder on your PATH (e.g., `C:\Users\jsp6\bin\`)
+2. Place in a folder on your PATH (e.g., `C:\Users\<username>\bin\`)
 
 ---
 

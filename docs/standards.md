@@ -5,9 +5,11 @@
 - Prompt cards: kebab-case filenames (example: `reset-windows-update-components.md`).
 
 ## Folder Conventions
-- `PowerShell/` — scripts and reusable functions.
+- `powershell/` — scripts and reusable functions.
 - `prompts/` — prompt cards and templates.
 - `docs/` — standards, workflow, and state.
+- `docs/setup/` — environment and tooling setup guides.
+- `ninjaone/` — NinjaOne-specific scripts and dashboards.
 - `samples/` — sanitized sample inputs/outputs.
 - `scripts/` — batch tasks and workflow notes.
 
