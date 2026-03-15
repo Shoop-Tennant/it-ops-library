@@ -17,6 +17,7 @@ resource "proxmox_lxc" "pihole" {
   network {
     name   = "eth0"
     bridge = "vmbr0"
-    ip     = "dhcp"
+    ip     = "192.168.4.2/22"
+    gw     = "192.168.4.1"
   }
 }

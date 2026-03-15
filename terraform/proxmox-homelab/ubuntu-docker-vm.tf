@@ -53,8 +53,8 @@ resource "proxmox_vm_qemu" "ubuntu_docker" {
     virtio {
       virtio0 {
         disk {
-          size       = 50
-          storage    = "local-lvm"
+          size    = 50
+          storage = "local-lvm"
           discard = true
         }
       }
@@ -76,12 +76,12 @@ resource "proxmox_vm_qemu" "ubuntu_docker" {
   }
 
   # Cloud-Init: identity
-  ciuser    = var.docker_vm_ci_user
+  ciuser     = var.docker_vm_ci_user
   cipassword = var.docker_vm_ci_password
-  sshkeys   = var.docker_vm_ssh_public_key
+  sshkeys    = var.docker_vm_ssh_public_key
 
-  # Cloud-Init: networking — swap to a static IP if preferred
-  ipconfig0  = "ip=dhcp"
+  # Cloud-Init: networking
+  ipconfig0  = "ip=192.168.4.20/22,gw=192.168.4.1"
   nameserver = "1.1.1.1"
 
   # Start the VM automatically after provisioning
