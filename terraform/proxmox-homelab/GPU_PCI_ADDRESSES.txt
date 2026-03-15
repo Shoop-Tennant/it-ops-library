@@ -1,0 +1,24 @@
+# GPU PCI Addresses — Proxmox Homelab
+# Generated: 2026-03-15 15:45:38
+# NOTE: PCI addresses marked UNKNOWN — SSH to homelab LAN (192.168.4.x) was not
+# reachable from the WSL2 execution environment at time of generation.
+# To populate: SSH into each node and run the lspci commands below.
+
+PVE01_GPU=Quadro P4000 [10de:1bb1]
+PVE01_PCI=UNKNOWN — run on pve01: lspci -nn | grep '10de:1bb1'
+# Format result as: 0000:XX:00.0,pcie=1
+
+PVE02_GPU=RTX A4500 [10de:25b6]
+PVE02_PCI=UNKNOWN — run on pve02: lspci -nn | grep '10de:25b6'
+# Format result as: 0000:XX:00.0,pcie=1,x-vga=1
+
+# --- How to update this file ---
+# 1. SSH into pve01: ssh root@192.168.4.10
+#    Run: lspci -nn | grep '10de:1bb1'
+#    Example output: 01:00.0 VGA compatible controller [0300]: NVIDIA Quadro P4000 [10de:1bb1]
+#    → PVE01_PCI=0000:01:00.0,pcie=1
+#
+# 2. SSH into pve02: ssh root@192.168.4.11
+#    Run: lspci -nn | grep '10de:25b6'
+#    Example output: 01:00.0 VGA compatible controller [0300]: NVIDIA RTX A4500 [10de:25b6]
+#    → PVE02_PCI=0000:01:00.0,pcie=1,x-vga=1

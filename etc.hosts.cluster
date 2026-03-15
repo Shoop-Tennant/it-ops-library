@@ -1,0 +1,8 @@
+192.168.4.10  pve01.homelab.local pve01
+192.168.4.11  pve02.homelab.local pve02
+192.168.4.12  pve03-7090.homelab.local pve03-7090
+192.168.4.13  pve04-7090.homelab.local pve04-7090
+192.168.4.2   pihole-dns.homelab.local pihole-dns
+192.168.4.5   truenas-nfs.homelab.local truenas
+192.168.4.15  ai-node-a4500.homelab.local ai-node
+192.168.4.20  ubuntu-docker.homelab.local docker-host
