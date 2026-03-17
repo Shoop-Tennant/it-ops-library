@@ -1,4 +1,4 @@
-# Patch Operations Dashboard - Falkenberg - Pilot - February 2026
+# Patch Operations Dashboard - Northgate - Pilot - February 2026
 
 **Reporting Month:** February 2026
 
@@ -7,13 +7,13 @@
 - **Software Patches:** Scanned 1, Missing 94, Installed 20, Failed 0
 
 ## Top Offenders
-- 6DTW2B3 (Missing/Failed: 94)
+- NORD-WS01 (Missing/Failed: 94)
 
 ## OS Patching
 - No OS patch exceptions detected for the period.
 
 ## Software Patching
-- 6DTW2B3 | Missing: 94 | Failed: 0
+- NORD-WS01 | Missing: 94 | Failed: 0
 
 ## Notes / Caveats
 - Missing counts include pending, failed, and rejected patches detected between 2026-02-01 and 2026-02-28.

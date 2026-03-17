@@ -1,0 +1,45 @@
+AnythingLLM Backend Upgrade — P4000 to A4500
+=============================================
+Date: 2026-03-16
+
+BEFORE:
+  Backend: Ollama @ 192.168.4.16:11434 (ai-node-p4000)
+  GPU: Quadro P4000, 8GB VRAM
+  Model: qwen2.5:7b (4.7GB, fits in 8GB VRAM)
+  Embeddings: nomic-embed-text
+
+AFTER:
+  Backend: Ollama @ 192.168.4.15:11434 (ai-node-a4500)
+  GPU: RTX A4500 Laptop GPU, 16GB VRAM
+  Models: qwen2.5:14b (9.0GB), qwen2.5:7b (4.7GB), nomic-embed-text (274MB)
+  Embeddings: nomic-embed-text
+
+IMPROVEMENTS:
+  - 2x VRAM (8GB -> 16GB)
+  - qwen2.5:14b fits entirely in VRAM (9.0GB model, 16GB available)
+  - 14B model has significantly better reasoning vs 7B
+  - P4000 still available as secondary Ollama node @ 192.168.4.16:11434
+
+CHANGES MADE:
+  1. Pulled qwen2.5:14b on A4500 node (9.0GB)
+  2. Pulled nomic-embed-text on A4500 node (274MB)
+  3. Updated /opt/anythingllm/docker-compose.yml:
+     OLLAMA_BASE_PATH changed from http://192.168.4.16:11434 to http://192.168.4.15:11434
+  4. Restarted AnythingLLM container (docker compose down/up)
+
+FIRST LOGIN SETUP:
+  1. Open http://192.168.4.20:3001
+  2. In LLM Settings, select model: qwen2.5:14b
+  3. Embedding model should auto-detect nomic-embed-text
+  4. Create workspace and start uploading documents for RAG
+
+ARCHITECTURE:
+  Browser --> AnythingLLM (192.168.4.20:3001)
+                |
+                +---> Ollama PRIMARY (192.168.4.15:11434)
+                |       RTX A4500 Laptop GPU, 16GB VRAM
+                |       qwen2.5:14b + nomic-embed-text
+                |
+                +---> Ollama SECONDARY (192.168.4.16:11434) [available, not connected]
+                        Quadro P4000, 8GB VRAM
+                        qwen2.5:7b + nomic-embed-text
