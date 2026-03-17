@@ -22,6 +22,24 @@ variable "docker_vm_ssh_public_key" {
   sensitive   = true
 }
 
+variable "ai_node_template" {
+  description = "Name of the Cloud-Init VM template on Proxmox to clone for the AI node"
+  type        = string
+  default     = "ubuntu-2404-cloud"
+}
+
+variable "ai_node_ci_user" {
+  description = "Cloud-Init username for the AI node VM"
+  type        = string
+  default     = "ubuntu"
+}
+
+variable "ai_node_ci_password" {
+  description = "Cloud-Init password for the AI node VM"
+  type        = string
+  sensitive   = true
+}
+
 variable "lxc_root_password" {
   description = "Root password for the LXC containers"
   type        = string

@@ -1,24 +1,55 @@
 # GPU PCI Addresses — Proxmox Homelab
-# Generated: 2026-03-15 15:45:38
-# NOTE: PCI addresses marked UNKNOWN — SSH to homelab LAN (192.168.4.x) was not
-# reachable from the WSL2 execution environment at time of generation.
-# To populate: SSH into each node and run the lspci commands below.
+# Generated: 2026-03-15 (auto-discovered via Proxmox API)
+# Source: GET /nodes/{node}/hardware/pci
+
+# --- pve01: Quadro P4000 ---
+# Device: GP104GL [Quadro P4000]
+# Vendor ID: 10de | Device ID: 1bb1
+# PCI Slot: 0000:01:00.0
+# IOMMU Group: 2
+# Audio Function: 0000:01:00.1 (GP104 HD Audio — passthrough together)
 
 PVE01_GPU=Quadro P4000 [10de:1bb1]
-PVE01_PCI=UNKNOWN — run on pve01: lspci -nn | grep '10de:1bb1'
-# Format result as: 0000:XX:00.0,pcie=1
+PVE01_PCI=0000:01:00.0
 
-PVE02_GPU=RTX A4500 [10de:25b6]
-PVE02_PCI=UNKNOWN — run on pve02: lspci -nn | grep '10de:25b6'
-# Format result as: 0000:XX:00.0,pcie=1,x-vga=1
+# Terraform hostpci0 value for pve01 AI-node VM:
+# hostpci0 = "0000:01:00,pcie=1"
+# (Omit .0 suffix — Proxmox passes the entire IOMMU group incl. audio)
 
-# --- How to update this file ---
-# 1. SSH into pve01: ssh root@192.168.4.10
-#    Run: lspci -nn | grep '10de:1bb1'
-#    Example output: 01:00.0 VGA compatible controller [0300]: NVIDIA Quadro P4000 [10de:1bb1]
-#    → PVE01_PCI=0000:01:00.0,pcie=1
-#
-# 2. SSH into pve02: ssh root@192.168.4.11
-#    Run: lspci -nn | grep '10de:25b6'
-#    Example output: 01:00.0 VGA compatible controller [0300]: NVIDIA RTX A4500 [10de:25b6]
-#    → PVE02_PCI=0000:01:00.0,pcie=1,x-vga=1
+# --- pve02: RTX A4500 ---
+# Device: GA104GLM [RTX A4500 Laptop GPU]
+# Vendor ID: 10de | Device ID: 24ba
+# NOTE: Device ID is 24ba (GA104GLM laptop variant), not 25b6 (workstation A4500)
+#       Physical card may still be branded RTX A4500 — confirm with: lspci -nn on pve02
+# PCI Slot: 0000:01:00.0
+# IOMMU Group: 13
+# Audio Function: 0000:01:00.1 (GA104 HD Audio — passthrough together)
+
+PVE02_GPU=RTX A4500 [10de:24ba]
+PVE02_PCI=0000:01:00.0
+
+# Terraform hostpci0 value for pve02 AI-node VM:
+# hostpci0 = "0000:01:00,pcie=1,x-vga=1"
+
+# --- Terraform snippet (pve01 AI VM) ---
+# resource "proxmox_vm_qemu" "ai_node_pve01" {
+#   target_node = "pve01"
+#   hostpci {
+#     id      = "hostpci0"
+#     pcie    = true
+#     rombar  = true
+#     pciid   = "0000:01:00"
+#   }
+# }
+
+# --- Terraform snippet (pve02 AI VM) ---
+# resource "proxmox_vm_qemu" "ai_node_pve02" {
+#   target_node = "pve02"
+#   hostpci {
+#     id      = "hostpci0"
+#     pcie    = true
+#     rombar  = true
+#     xvga    = true
+#     pciid   = "0000:01:00"
+#   }
+# }

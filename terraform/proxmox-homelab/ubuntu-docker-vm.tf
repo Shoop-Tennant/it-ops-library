@@ -49,9 +49,12 @@ resource "proxmox_vm_qemu" "ubuntu_docker" {
   memory = 16384
 
   # Boot disk (50 GB) + Cloud-Init drive
+  # NOTE: The template disk is scsi0 (created with --scsihw virtio-scsi-pci --scsi0).
+  # Using a scsi block here causes Terraform to resize the cloned disk in-place
+  # rather than creating a new empty virtio0 and orphaning the OS disk as unused0.
   disks {
-    virtio {
-      virtio0 {
+    scsi {
+      scsi0 {
         disk {
           size    = 50
           storage = "local-lvm"
@@ -67,6 +70,9 @@ resource "proxmox_vm_qemu" "ubuntu_docker" {
       }
     }
   }
+
+  # Boot order matches the disk slot used above
+  boot = "order=scsi0"
 
   # Network
   network {
