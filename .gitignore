@@ -65,4 +65,19 @@ local/
 # ── Claude Code session data ──────────────────────────────────────
 .claude/
 
+# ── NinjaOne patching — sample folder structure ───────────────────
+ninjaone/patching/dashboard/samples/raw/
+ninjaone/patching/dashboard/samples/sanitized/
+ninjaone/patching/dashboard/samples/_private/
+ninjaone/patching/dashboard/samples/output/
 
+# ── Raw data / internal exports (never commit) ────────────────────
+ninjaone/patching/dashboard/docs/
+
+# ── Windows NTFS ADS sidecars ─────────────────────────────────────
+*:Zone.Identifier
+*:sec.endpointdlp
+*.Zone.Identifier
+
+# ── Cowork workspace file (local only) ────────────────────────────
+.cowork.json
