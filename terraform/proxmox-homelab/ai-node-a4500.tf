@@ -99,4 +99,11 @@ resource "proxmox_vm_qemu" "ai_node_a4500" {
   nameserver = "1.1.1.1"
 
   vm_state = "running"
+
+  lifecycle {
+    ignore_changes = [
+      hostpci,
+      disk,
+    ]
+  }
 }
