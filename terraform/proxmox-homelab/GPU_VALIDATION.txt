@@ -1,0 +1,35 @@
+GPU_VALIDATION — generated 20260315_201305
+========================================
+
+--- pve01: lspci NVIDIA ---
+01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GP104GL [Quadro P4000] [10de:1bb1] (rev a1)
+01:00.1 Audio device [0403]: NVIDIA Corporation GP104 High Definition Audio Controller [10de:10f0] (rev a1)
+STATUS: ✅ NVIDIA GPU found on pve01
+
+--- pve02: lspci NVIDIA ---
+01:00.0 VGA compatible controller [0300]: NVIDIA Corporation GA104GLM [RTX A4500 Laptop GPU] [10de:24ba] (rev a1)
+01:00.1 Audio device [0403]: NVIDIA Corporation GA104 High Definition Audio Controller [10de:228b] (rev a1)
+STATUS: ✅ NVIDIA GPU found on pve02
+
+--- pve01: IOMMU (dmesg) ---
+[    0.229114] DMAR-IR: IOAPIC id 2 under DRHD base  0xfed91000 IOMMU 1
+[    0.417314] iommu: Default domain type: Translated
+[    0.417314] iommu: DMA domain TLB invalidation policy: lazy mode
+[    0.490586] pci 0000:00:02.0: Adding to iommu group 0
+[    0.490903] pci 0000:00:00.0: Adding to iommu group 1
+
+--- pve02: IOMMU (dmesg) ---
+[    0.000000] Command line: BOOT_IMAGE=/boot/vmlinuz-6.17.2-1-pve root=/dev/mapper/pve-root ro quiet intel_iommu=on iommu=pt
+[    0.039258] Kernel command line: BOOT_IMAGE=/boot/vmlinuz-6.17.2-1-pve root=/dev/mapper/pve-root ro quiet intel_iommu=on iommu=pt
+[    0.039292] DMAR: IOMMU enabled
+[    0.098592] DMAR-IR: IOAPIC id 2 under DRHD base  0xfed91000 IOMMU 0
+[    0.364926] iommu: Default domain type: Passthrough (set via kernel command line)
+
+--- pve01: IOMMU groups for 01:00 ---
+/sys/kernel/iommu_groups/2/devices/0000:01:00.0
+/sys/kernel/iommu_groups/2/devices/0000:01:00.1
+
+--- pve02: IOMMU groups for 01:00 ---
+/sys/kernel/iommu_groups/13/devices/0000:01:00.0
+/sys/kernel/iommu_groups/13/devices/0000:01:00.1
+

@@ -1,0 +1,53 @@
+A4500 GPU Passthrough — Advanced VFIO Attempts
+================================================
+Date: 2026-03-16
+Result: SUCCESS
+
+Device: NVIDIA RTX A4500 Laptop GPU (GA104GLM)
+  PCI ID: 10de:24ba (GPU) + 10de:228b (audio)
+  PCI Address: 0000:01:00.0 + 0000:01:00.1
+  IOMMU Group: 13 (GPU + audio only, clean group)
+  BAR: 16GB prefetchable at 0x4000000000
+
+Previous Failure:
+  DMA mapping error (-22) at 0x380000000000
+  Cause: Laptop GPU variant needs specific VFIO workarounds
+
+What Fixed It:
+  1. /etc/modprobe.d/vfio-pci.conf:
+     options vfio-pci ids=10de:24ba,10de:228b
+     options vfio-pci disable_vga=1
+     options vfio-pci disable_idle_d3=1
+
+  2. Kernel parameters (/etc/default/grub):
+     GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on iommu=pt video=efifb:off"
+
+  3. VM config (hostpci):
+     hostpci0: 0000:01:00,pcie=1,rombar=0
+     (rombar=0 — no ROM BAR, avoid VBIOS issues with laptop variant)
+     (no x-vga — not primary display)
+
+  4. VM already had:
+     machine: q35
+     cpu: host
+     vga: type=serial0
+
+  5. update-grub && update-initramfs -u -k all && reboot
+
+Verification:
+  nvidia-smi output:
+    NVIDIA RTX A4500 Laptop GPU
+    Driver: 580.126.09
+    CUDA: 13.0
+    VRAM: 16384 MiB total, 4961 MiB used (qwen2.5:7b loaded)
+
+  Ollama inference:
+    "Hello, nice to meet you." in 0.10s (GPU-accelerated)
+
+Key Lessons — Laptop NVIDIA GPU Passthrough:
+  - disable_vga=1 prevents host from trying to use GPU as VGA
+  - disable_idle_d3=1 prevents laptop power management from putting GPU to sleep
+  - video=efifb:off prevents efifb from claiming the GPU framebuffer
+  - rombar=0 avoids VBIOS ROM issues (laptop VBIOSes are often problematic)
+  - No x-vga flag needed (use serial console instead)
+  - Driver version 580 from Ubuntu repos (script targeted 550, repo had 580)

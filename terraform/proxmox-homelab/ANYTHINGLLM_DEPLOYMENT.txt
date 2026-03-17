@@ -1,0 +1,47 @@
+AnythingLLM Deployment — Proxmox Homelab
+========================================
+Date: 2026-03-16
+
+Access URL: http://192.168.4.20:3001
+
+Architecture:
+  AnythingLLM (ubuntu-docker, 192.168.4.20:3001)
+      |
+      +---> Ollama LLM backend (ai-node-p4000, 192.168.4.16:11434)
+             - Quadro P4000 GPU (8GB VRAM)
+             - Models: qwen2.5:7b (LLM), nomic-embed-text (embeddings)
+
+Container Config:
+  Host: ubuntu-docker (192.168.4.20)
+  Path: /opt/anythingllm/docker-compose.yml
+  Image: mintplexlabs/anythingllm:latest
+  Port: 3001
+  Volume: anythingllm_storage:/app/server/storage
+  Restart: unless-stopped
+
+Environment:
+  STORAGE_DIR=/app/server/storage
+  LLM_PROVIDER=ollama
+  OLLAMA_BASE_PATH=http://192.168.4.16:11434
+  EMBEDDING_ENGINE=ollama
+  EMBEDDING_MODEL_PREF=nomic-embed-text
+  VECTOR_DB=lancedb
+
+First Login:
+  1. Open http://192.168.4.20:3001 in browser
+  2. Create admin account (first user becomes admin)
+  3. LLM and embedding are pre-configured (Ollama)
+  4. Create a workspace to start RAG document ingestion
+
+Management:
+  SSH: ssh ubuntu-docker
+  Logs: docker logs -f anythingllm
+  Restart: cd /opt/anythingllm && docker compose restart
+  Stop: cd /opt/anythingllm && docker compose down
+  Update: cd /opt/anythingllm && docker compose pull && docker compose up -d
+
+Ollama (ai-node-p4000):
+  SSH: ssh ai-node-p4000
+  Models: ollama list
+  Pull model: ollama pull <model>
+  GPU check: nvidia-smi

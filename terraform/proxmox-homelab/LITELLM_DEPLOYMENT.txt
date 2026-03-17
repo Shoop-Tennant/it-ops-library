@@ -1,0 +1,82 @@
+LiteLLM Proxy — Dual-GPU OpenAI-Compatible API
+================================================
+Date: 2026-03-16
+
+Endpoint: http://192.168.4.20:4000
+API Key: sk-litellm-homelab
+
+Model Routing:
+  gpt-3.5-turbo         → qwen2.5:7b   → P4000  (192.168.4.16, 8GB VRAM)
+  gpt-4                 → qwen2.5:14b  → A4500  (192.168.4.15, 16GB VRAM)
+  gpt-4-turbo           → qwen2.5:14b  → A4500  (192.168.4.15, 16GB VRAM)
+  text-embedding-ada-002 → nomic-embed  → A4500  (192.168.4.15, 16GB VRAM)
+
+Config: /opt/litellm/config.yaml
+Compose: /opt/litellm/docker-compose.yml
+Container: litellm (ghcr.io/berriai/litellm:main-latest)
+
+---
+
+Test Commands (curl):
+
+  # Chat completion (small model, fast)
+  curl http://192.168.4.20:4000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer sk-litellm-homelab" \
+    -d '{"model":"gpt-3.5-turbo","messages":[{"role":"user","content":"Hello"}]}'
+
+  # Chat completion (large model, smarter)
+  curl http://192.168.4.20:4000/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer sk-litellm-homelab" \
+    -d '{"model":"gpt-4","messages":[{"role":"user","content":"Explain IOMMU"}]}'
+
+  # List models
+  curl http://192.168.4.20:4000/v1/models \
+    -H "Authorization: Bearer sk-litellm-homelab"
+
+---
+
+PowerShell Example:
+
+  $headers = @{
+      "Content-Type"  = "application/json"
+      "Authorization" = "Bearer sk-litellm-homelab"
+  }
+
+  $body = @{
+      model    = "gpt-4"
+      messages = @(
+          @{ role = "user"; content = "Summarize this ticket: user cannot print" }
+      )
+  } | ConvertTo-Json -Depth 5
+
+  $response = Invoke-RestMethod -Uri "http://192.168.4.20:4000/v1/chat/completions" `
+      -Method Post -Headers $headers -Body $body
+
+  $response.choices[0].message.content
+
+---
+
+Python Example:
+
+  from openai import OpenAI
+
+  client = OpenAI(
+      api_key="sk-litellm-homelab",
+      base_url="http://192.168.4.20:4000/v1"
+  )
+
+  response = client.chat.completions.create(
+      model="gpt-4",
+      messages=[{"role": "user", "content": "Hello"}]
+  )
+  print(response.choices[0].message.content)
+
+---
+
+Management:
+  Logs: ssh ubuntu-docker 'docker logs -f litellm'
+  Restart: ssh ubuntu-docker 'cd /opt/litellm && docker compose restart'
+  Update config: edit /opt/litellm/config.yaml, then restart
+  Update image: cd /opt/litellm && docker compose pull && docker compose up -d
