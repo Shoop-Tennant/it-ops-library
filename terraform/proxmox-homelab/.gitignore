@@ -1,0 +1,11 @@
+# Deployment logs (timestamped script output, large, contain terminal escapes)
+*_DEPLOYMENT_*.txt
+DEPLOYMENT_COMPLETE_*.txt
+DEPLOYMENT_LOG_*.txt
+VM_REBUILD_SUCCESS_*.txt
+P4000_GPU_DEPLOYMENT_*.txt
+OLLAMA_GPU_TEST.txt
+GPU_VERIFICATION.txt
+
+# Terraform binary plan files
+*.tfplan
